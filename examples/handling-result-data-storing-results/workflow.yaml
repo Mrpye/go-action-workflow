@@ -1,0 +1,46 @@
+meta_data:
+    name: handling-result-data-storing-results
+    description: This example show how you can handle result data and store it in the store for later use.
+    version: 1.0.0
+    author: Andrew Pye
+    contact: 
+    create_date: "2022-11-13 11:39:44"
+    update_date: "2022-11-13 11:39:44"
+jobs:
+    - key: handling-result-data-storing-results
+      title: Run the custom action
+      description: This runs the custom action
+      actions:
+        - action: MultiPrint
+          config:
+            map_value:
+              map_value1: "{{get_param `value1`}}"
+              map_value2: "{{get_param `value2`}}"
+              map_value3: "{{get_param `value3`}}"
+              map_value4: "This is a value from the config"
+            result_action: "js"
+            result_js: |
+              function ActionResults(model,result){
+                //parse the result
+                var obj=JSON.parse(result);
+                //print the value
+                console(obj.map_value1);
+                //Store the value1
+                store_value("my_bucket","my_key",obj.map_value1);
+                //print the value from the config
+                console(model.CurrentAction.Config.map_value.map_value4)
+                //store the value from the config
+                store_value("my_bucket","stored_config_value",model.CurrentAction.Config.map_value.map_value4);
+                // return true for success
+                return true;
+              }
+        - action: "print;{{get_store `my_bucket` `my_key`}}"
+        - action: "print;{{get_store `my_bucket` `stored_config_value`}}"
+parameters: 
+    - key: value1
+      value: "Hello world"
+    - key: value2
+      value: 55
+    - key: value3
+      value: false
+

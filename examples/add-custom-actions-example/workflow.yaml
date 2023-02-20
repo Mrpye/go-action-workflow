@@ -1,0 +1,32 @@
+meta_data:
+    name: add-custom-actions-example
+    description: This example show how you can add your own 
+    version: 1.0.0
+    author: Andrew Pye
+    contact: 
+    create_date: "2022-11-13 11:39:44"
+    update_date: "2022-11-13 11:39:44"
+    vars: 
+      example_value: "This is an example value"
+jobs:
+    - key: add-custom-actions-example
+      title: Run the custom action
+      description: This runs the custom action
+      actions:
+        - action: MultiPrint
+          config:
+            string_value: "{{.Meta.Vars.test_var }}"
+            int_value: 100
+            bool_value: true
+            map_value:
+              map_value1: "{{get_param `value1`}}"
+              map_value2: "{{get_param `value2`}}"
+              map_value3: "{{get_param `value3`}}"
+parameters: 
+    - key: value1
+      value: "Hello world"
+    - key: value2
+      value: 55
+    - key: value3
+      value: false
+

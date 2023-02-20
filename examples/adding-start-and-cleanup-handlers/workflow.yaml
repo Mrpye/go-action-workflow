@@ -1,0 +1,18 @@
+meta_data:
+    name: adding-start-and-cleanup-handlers
+    description: This example show how you can add start and cleanup handlers to your workflow. Also add new template functions to the workflow.
+    version: 1.0.0
+    author: Andrew Pye
+    contact: 
+    create_date: "2022-11-13 11:39:44"
+    update_date: "2022-11-13 11:39:44"
+jobs:
+    - key: adding-start-and-cleanup-handlers
+      title: Print the values
+      description:  Get the values from the store that we set in the start handler
+      actions:
+        - action: "print;{{add_http (get_store `target` `host`)}}"
+        - action: "print;{{get_store `target` `port`}}"
+parameters: 
+
+
