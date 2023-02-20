@@ -186,7 +186,7 @@ Jobs:
       Actions:
         - Key: (string)
           Action: (string)
-		  Description: (string)
+          Description: (string)
           Fail:  (string/token)
           ContinueOnError: (bool/token)
           Config: (key pair value/token can be used as value)
