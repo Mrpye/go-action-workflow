@@ -27,7 +27,7 @@ func (m *Workflow) RunJob(key string) error {
 	//Initialize the the actions and targets
 	//**************************************
 	if m.CleanFunc != nil {
-		err := m.InitFunc(m)
+		err := m.CleanFunc(m)
 		if err != nil {
 			return err
 		}

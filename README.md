@@ -186,7 +186,7 @@ Jobs:
       Actions:
         - Key: (string)
           Action: (string)
-	      Description: (string)
+		  Description: (string)
           Fail:  (string/token)
           ContinueOnError: (bool/token)
           Config: (key pair value/token can be used as value)
@@ -202,7 +202,7 @@ Parameters:
 <details>
 <summary>Template functions</summary>
 
-you can use template functions to manipulate or access data. below is a table of the currently implements function, but it is possible to define your own. **TODO add a ref to example**
+you can use template functions to manipulate or access data. below is a table of the currently implements function, but it is possible to define your own see [here example 4](#how-to-use-go-workflow)
 
 ```yaml
 #get a parameter value
@@ -845,10 +845,9 @@ parameters:
 ## Result
 
 ```bash
-Hello world
-This is a value from the config
-Hello world
-This is a value from the config
+http://localhost
+8080
+Cleaning up
 ```
 
 </details>
