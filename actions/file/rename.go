@@ -1,13 +1,21 @@
-package copy
+package file
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/Mrpye/go-workflow/workflow"
-	"github.com/Mrpye/golib/lib"
 )
 
-func Action_Copy(w *workflow.Workflow) error {
+// Action_Copy is a custom action that copies a file
+/*
+- action: ActionStore
+	config:
+		source_file: the file to copy
+		dest_file: 	the destination file
+*/
+func Action_Rename(w *workflow.Workflow) error {
 
 	//*********************
 	//Get the config values
@@ -22,13 +30,13 @@ func Action_Copy(w *workflow.Workflow) error {
 		return err
 	}
 
-	data_copy, err := lib.CopyFile(source_file, dest_file)
-	if err != nil {
-		return err
+	e := os.Rename(source_file, dest_file)
+	if e != nil {
+		log.Fatal(e)
 	}
 
 	if w.Verbose > workflow.LOG_QUIET {
-		fmt.Printf("file %s copied to %s bytes %v", source_file, dest_file, data_copy)
+		fmt.Printf("file %s renamed to %s\n", source_file, dest_file)
 	}
 
 	return nil

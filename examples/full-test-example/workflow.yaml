@@ -1,0 +1,128 @@
+meta_data:
+  name: test-example
+  description: This is used for testing
+  version: 1.0.0
+  author: Andrew Pye
+  contact: test@test.com
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+  vars:
+    example_value: "This is an example value"
+jobs:
+  - key: test-example
+    title: Simple example
+    description: This job will test features of the workflow engine
+    actions:
+      - action: ActionJSAndMap
+        config:
+          map_value:
+            map_value1: "{{get_param `times_to_loop`}}"
+            map_value2: "{{get_param `test_string`}}"
+            map_value3: "{{get_param `test_bool`}}"
+            map_value4: "This is a value from the config"
+          result_action: "js"
+          result_js: |
+              function ActionResults(model,result){
+                //parse the result
+                var obj=JSON.parse(result);
+                //Store the value1
+                store_value("test","js_map_value1",obj.map_value1);
+                store_value("test","js_map_value2",obj.map_value2.toUpperCase());
+                store_value("test","js_map_value3",obj.map_value3);
+                store_value("test","js_map_value4",obj.map_value4.toUpperCase());
+                return true;
+              }
+      # This action will store the value of the meta var example_value in the store
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_var"
+          value: "{{ .Meta.Vars.example_value }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_name"
+          value: "{{ .Meta.Name }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_description"
+          value: "{{ .Meta.Description }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_version"
+          value: "{{ .Meta.Version }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_author"
+          value: "{{ .Meta.Author }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_contact"
+          value: "{{ .Meta.Contact }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_create_date"
+          value: "{{ .Meta.CreatedDate }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_update_date"
+          value: "{{ .Meta.UpdateDate }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "param_test_int"
+          value: "{{ get_param `times_to_loop` }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "param_test_string"
+          value: "{{ get_param `test_string` }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "param_test_bool"
+          value: "{{ get_param `test_bool` }}"
+
+      - action: "for;i;0;{{ get_param `times_to_loop`}}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "loop_increment{{ get_stk_val `i`}}"
+          value: "{{ get_stk_val `i`}}"
+      - action: "next"
+
+      - action: "for;i;{{ get_param `times_to_loop`}};0"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "loop_decrement{{ get_stk_val `i`}}"
+          value: "{{ get_stk_val `i`}}"
+      - action: "next"
+
+      - action: "for;i;0;{{ get_param `times_to_loop`}}"
+      - action: "for;j;0;{{ get_param `times_to_loop`}}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "nested_loop_{{ get_stk_val `i`}}-{{ get_stk_val `j`}}"
+          value: "{{ get_stk_val `i`}}-{{ get_stk_val `j`}}"
+      - action: "next"
+      - action: "next"
+      - action: "goto;ActionTest"
+      - action: ActionFailTest
+        key: ActionFailTest
+      - action: ActionTest
+        key: ActionTest
+parameters:
+  - key: times_to_loop
+    value: 3
+  - key: test_string
+    value: "this is a test string"
+  - key: test_bool
+    value: true

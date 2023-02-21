@@ -3,13 +3,18 @@
 ## Description
 go-workflow allows you to embed a basic workflow engine into your GO projects supporting basic flow operations such as loops, goto, pause and end. you can create custom actions to perform tasks, and using go's template engine you can manipulate values in your workflow manifest. with the ability to run **js** you can manipulate data returned from your actions and store data so that it can be used in later actions. 
 
+---
+
 ## When to use go-workflow
 - go-workflow can be used in your project when you need automate tasks
 - To create automation tooling
 
+---
+
 ## Requirements
 * go 1.8 [https://go.dev/doc/install](https://go.dev/doc/install) to run and install helm-api
 
+---
 
 ## Project folders
 Below is a description helm-api project folders and what they contain
@@ -17,6 +22,9 @@ Below is a description helm-api project folders and what they contain
 |-----------|---|
 | workflow    | go-workflow lib  |
 | examples    | example go-workflow use cases  |
+| actions    | some prebuilt actions that can be included in your workflow  |
+
+---
 
 ## Installation
 You can install go-workflow using the following command
@@ -35,6 +43,8 @@ go get github.com/Mrpye/go-workflow
     import "github.com/Mrpye/go-workflow/workflow"
 ```
 </details>
+
+---
 
 ## go-workflow manifest format
 The go-workflow manifest is a YAML file used to define a workflow and actions to be performed, you can then load this into go-workflow and run a job. see the [`basic-example`](#how-to-use-go-workflow) under **How to use go-workflow** for more information on loading and running workflow manifest file. 
@@ -135,6 +145,8 @@ The parameters section is used to create parameters that can be specified by the
 
 </details>
 
+---
+
 ## Template Engine
 To facilitate the ability to inject values into the manifest go-workflow uses golang's template engine. template tokens that are wrapped with **{{ }}** are used to inject values.You can get more information on the go template [here](https://pkg.go.dev/text/template). go-workflow parses each parameter and if present replaces the token with the required value.
 To access the data in the manifest a model is passed to the template engine.
@@ -213,6 +225,7 @@ you can use template functions to manipulate or access data. below is a table of
 
 |   function        |params| Description  | 
 |-----------------|-------|-------|
+| read_file  |[string]|Reads a text file|
 | base64enc    | [string]|base64 encode a string |
 | base64dec    |[string] |base64 decode a string |
 | gzip_base64    |[string] |zip a string and base 64 encode|
@@ -237,7 +250,9 @@ you can use template functions to manipulate or access data. below is a table of
 
 </details>
 
-# inbuilt actions
+---
+
+## inbuilt actions
 go-workflow comes with some basic actions mainly around handling the flow. each parameter is separated with **;**. You can also use end or goto in the Fail field of the action
 
 |   action        |params| Description  |
@@ -247,8 +262,11 @@ go-workflow comes with some basic actions mainly around handling the flow. each 
 | goto    |[action key] |jump to an action with the matching key |
 | wait-seconds or wait    |[int] |wait for x seconds |
 | wait-minutes    |[int] |wait for x minutes |
-| for    |[variable];[start_value];[end_value] or no params for infinite loop|for loop |
+| for    |[variable];[start_value];[end_value]|for loop |
 | next   |N/A|used withe the for loop to denote the end of the loop |
+
+<details>
+<summary>Examples</summary>
 
 ``` yaml
 
@@ -277,12 +295,209 @@ jobs:
             key: "end_action"
         
 ```
+</details>
 
+---
+
+## Actions available in the package
+To help get you started go-workflow has some Actions that if you choose can be added to the workflow engine.
+
+|   action        |package| Description  |
+|-----------------|-------|-------|
+| CallApi    |actions\api|action for rest api calls |
+| Action_Copy    |actions\file|Copies a file |
+| Action_Rename    |actions\file|Renames a file |
+| Action_Delete    |actions\file|Deletes a file |
+| Action_RunJS    |actions\js|Run java script |
+| Action_Store    |actions\store|Gives the ability to store values is the bucket store |
+
+<details>
+<summary>1. CallApi Action</summary>
+
+This action enables you to make Rest API Calls
+
+**Example:**  examples/workflow-call-api-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| url    |   |target url |
+| method    | POST,GET,PATCH,PUT,DELETE  | |
+| body_type    | none,form-data,raw | |
+| body    |   |body payload data |
+|body_from_file||Allows you to read the body from file|
+| header_    |   |set the headers |
+| result_action    |none,print,js   |what to do with the returned results |
+| result_format    |none,json,yaml,toml,xml,plain   |how to format the result|
+| result_js    |   |js to process the result can be a file or inline |
+
+
+### POST Example
+```yaml
+- action: api
+    description: "This is an example of calling an API POST request."
+    config:
+      method: POST
+      url: https://gorest.co.in/public/v2/users
+      body_type: raw
+      body: |
+        {"name":"Agent Smith", "gender":"male", "email":"agent.smith@15ce.com", "status":"active"}
+      header_Content-Type: application/json
+      header_Authorization: "Bearer {{get_param `token`}}"
+      result_action: "js"
+      result_js: |
+        function ActionResults(model,result){
+          var obj=JSON.parse(result);
+          store_value("api_result","user_id",obj.id);
+          console(result);
+          return true;
+        }
+```
+
+### GET Example
+```yaml
+- action: api
+    description: "This is an example of calling an API GET request."
+    config:
+      method: GET
+      url: https://gorest.co.in/public/v2/users
+      header_Content-Type: application/json
+      header_Authorization: "Bearer {{get_param `token`}}"
+      result_action: "js"
+      result_js: |
+        function ActionResults(model,result){
+          console(result);
+          return true;
+        }
+```
+</details>
+
+<details>
+<summary>2. Copy Action</summary>
+
+This action copies a file
+
+**Example:**  examples/workflow-copy-file-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| source_file    |   |Source file to copy |
+| dest_file    |  | where to copy to (Use fullt path and filename) |
+
+
+
+### Copy Example
+```yaml
+- action: copy
+    config:
+      source_file: "./source_file.txt"
+      dest_file: "./destination_file.txt"
+```
+
+</details>
+
+<details>
+<summary>3. Delete Action</summary>
+
+This action deletes a file
+
+**Example:**  examples/workflow-copy-file-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| source_file    |   |The file to delete |
+
+### Copy Example
+```yaml
+- action: delete
+    config:
+      source_file: "./my_file.txt"
+```
+
+</details>
+
+<details>
+<summary>4. Rename Action</summary>
+
+This action renames a file also acts as a move if your path is different
+
+**Example:**  examples/workflow-copy-file-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| source_file    |   |The file to rename |
+| dest_file    |   |What to name it to (Full path)  |
+
+### Copy Example
+```yaml
+- action: rename
+    config:
+      source_file: "./destination_file.txt"
+      dest_file: "./my_file.txt"
+```
+
+</details>
+
+<details>
+<summary>5. JS Action</summary>
+
+This action runs javascript
+
+**Example:**  examples/workflow-js-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| js    |   |javascript code to run|
+| js_file    |   |read js in from a file |
+
+```yaml
+ actions:
+  - action: js
+    config:
+      js_file: "./code2.js;./code3.js"
+  - action: js
+    config:
+      js: |
+        console(model.Meta.Name );
+  - action: js
+    config:
+      js_file: "./code1.js"
+```
+
+</details>
+
+
+<details>
+<summary>6. Store Action</summary>
+
+This action stores values in the data bucket
+
+**Example:**  examples/workflow-store-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| bucket    |   |the data bucket to use|
+| key    |   |the key to store the value against |
+| value    |   |value to save |
+
+```yaml
+ actions:
+    - action: store
+      config:
+        bucket: "my_data"
+        key: "name"
+        value: "Andrew"
+    - action: "print;{{get_store `my_data` `name`}}"
+```
+
+</details>
+---
 
 ## How to use go-workflow
 The quickest and easiest way to get started is by creating a workflow manifest. you can create a workflow programmatically but it is far easier to write the manifest in a YML file and load it into using the library. 
 
-The [`git repo`](https://github.com/Mrpye/go-workflow) comes with some example that will cover the basics to more advanced examples.
+The [`git repo`](https://github.com/Mrpye/go-workflow) comes with some example that will cover the basics to more advanced features.
+You can find the example in the examples folder
+
 
 <details>
 <summary>1. simple-example</summary>
@@ -852,22 +1067,234 @@ Cleaning up
 
 </details>
 
+
+<details>
+<summary>5. full-test-example</summary>
+
+This example we are using workflow engine to test its features and validate the value are correct.
+This example makes use of actions/tests package where there are some helper action that we can use to test new features.
+ActionTest contains the tests and if an error occurs this will be passed by the RunJob function
+
+you can locate the example under: examples/full-test-example
+
+### main.go
+
+```go
+package main
+
+import (
+	"github.com/Mrpye/go-workflow/actions/store"
+	"github.com/Mrpye/go-workflow/actions/tests"
+	"github.com/Mrpye/go-workflow/workflow"
+)
+
+func main() {
+	//*****************
+	//create a workflow
+	//*****************
+	wf := workflow.CreateWorkflow()
+
+	//**********************************
+	//Only show errors and print actions
+	//**********************************
+	wf.Verbose = workflow.LOG_INFO
+
+	//*******************
+	//Add a custom action
+	//*******************
+	wf.ActionList["ActionStore"] = store.ActionStore
+	wf.ActionList["ActionTest"] = tests.ActionTest
+	wf.ActionList["ActionFailTest"] = tests.ActionFailTest
+	wf.ActionList["ActionJSAndMap"] = tests.ActionJSAndMap
+
+	//*************************
+	//load the workflow manifest
+	//*************************
+	err := wf.LoadManifest("./workflow.yaml")
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	//********************
+	//Run the workflow job
+	//********************
+	err = wf.RunJob("test-example")
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	println("Test Passed")
+
+}
+
+
+```
+
+### workflow.yaml
+
+
+```yaml
+meta_data:
+  name: test-example
+  description: This is used for testing
+  version: 1.0.0
+  author: Andrew Pye
+  contact: test@test.com
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+  vars:
+    example_value: "This is an example value"
+jobs:
+  - key: test-example
+    title: Simple example
+    description: This job will test features of the workflow engine
+    actions:
+      - action: ActionJSAndMap
+        config:
+          map_value:
+            map_value1: "{{get_param `times_to_loop`}}"
+            map_value2: "{{get_param `test_string`}}"
+            map_value3: "{{get_param `test_bool`}}"
+            map_value4: "This is a value from the config"
+          result_action: "js"
+          result_js: |
+              function ActionResults(model,result){
+                //parse the result
+                var obj=JSON.parse(result);
+                //Store the value1
+                store_value("test","js_map_value1",obj.map_value1);
+                store_value("test","js_map_value2",obj.map_value2.toUpperCase());
+                store_value("test","js_map_value3",obj.map_value3);
+                store_value("test","js_map_value4",obj.map_value4.toUpperCase());
+                return true;
+              }
+      # This action will store the value of the meta var example_value in the store
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_var"
+          value: "{{ .Meta.Vars.example_value }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_name"
+          value: "{{ .Meta.Name }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_description"
+          value: "{{ .Meta.Description }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_version"
+          value: "{{ .Meta.Version }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_author"
+          value: "{{ .Meta.Author }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_contact"
+          value: "{{ .Meta.Contact }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_create_date"
+          value: "{{ .Meta.CreatedDate }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "meta_update_date"
+          value: "{{ .Meta.UpdateDate }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "param_test_int"
+          value: "{{ get_param `times_to_loop` }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "param_test_string"
+          value: "{{ get_param `test_string` }}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "param_test_bool"
+          value: "{{ get_param `test_bool` }}"
+
+      - action: "for;i;0;{{ get_param `times_to_loop`}}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "loop_increment{{ get_stk_val `i`}}"
+          value: "{{ get_stk_val `i`}}"
+      - action: "next"
+
+      - action: "for;i;{{ get_param `times_to_loop`}};0"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "loop_decrement{{ get_stk_val `i`}}"
+          value: "{{ get_stk_val `i`}}"
+      - action: "next"
+
+      - action: "for;i;0;{{ get_param `times_to_loop`}}"
+      - action: "for;j;0;{{ get_param `times_to_loop`}}"
+      - action: ActionStore
+        config:
+          bucket: "test"
+          key: "nested_loop_{{ get_stk_val `i`}}-{{ get_stk_val `j`}}"
+          value: "{{ get_stk_val `i`}}-{{ get_stk_val `j`}}"
+      - action: "next"
+      - action: "next"
+      - action: "goto;ActionTest"
+      - action: ActionFailTest
+        key: ActionFailTest
+      - action: ActionTest
+        key: ActionTest
+parameters:
+  - key: times_to_loop
+    value: 3
+  - key: test_string
+    value: "this is a test string"
+  - key: test_bool
+    value: true
+
+```
+## Result
+
+```bash
+http://localhost
+8080
+Cleaning up
+```
+
+</details>
+
+
+---
+
 ## To Do
-- Unit Test
+- Unit Test for actions
 - Documentation the package
 - Add some common actions into the library such as 
-	- Call Rest API
-	- Count and Fail Action for retry
-	- JS Action
 	- Condition Action 
 	- Call Job Function
 - Add the ability to turn a job into a subprocess and use the Call Job Function to start it
+
 --- 
+
 
 ## Some notable 3rd party Libraries
 - [https://github.com/dop251/goja](https://github.com/dop251/goja) JS engine
 
 
+---
 
 ## license
 go-workflow is Apache 2.0 licensed.

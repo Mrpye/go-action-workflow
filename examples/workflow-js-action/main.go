@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Mrpye/go-workflow/actions/api"
+	"github.com/Mrpye/go-workflow/actions/js"
 	"github.com/Mrpye/go-workflow/workflow"
 )
 
@@ -19,7 +19,7 @@ func main() {
 	//*****************
 	//Add custom action
 	//*****************
-	wf.ActionList["api"] = api.CallApi //add the action for calling APIs
+	wf.ActionList["js"] = js.Action_RunJS //add the action for calling APIs
 
 	//*************************
 	//load the workflow manifest
@@ -32,7 +32,7 @@ func main() {
 	//********************
 	//Run the workflow job
 	//********************
-	err = wf.RunJob("simple-example")
+	err = wf.RunJob("call-js-example")
 	if err != nil {
 		println(err.Error())
 	}

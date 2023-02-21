@@ -52,9 +52,9 @@ func (m *loopStack) Push(variable_name string, index int, from int, to int) (*lo
 		}
 	}
 	if from < to {
-		m.stackList = append(m.stackList, loop{VariableName: variable_name, Index: index, From: from, To: to, CurrentValue: 0, Dec: false})
+		m.stackList = append(m.stackList, loop{VariableName: variable_name, Index: index, From: from, To: to, CurrentValue: from, Dec: false})
 	} else {
-		m.stackList = append(m.stackList, loop{VariableName: variable_name, Index: index, From: from, To: to, CurrentValue: 0, Dec: false})
+		m.stackList = append(m.stackList, loop{VariableName: variable_name, Index: index, From: from, To: to, CurrentValue: from, Dec: true})
 	}
 	return &m.stackList[len(m.stackList)-1], nil
 }

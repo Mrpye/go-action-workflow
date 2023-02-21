@@ -1,3 +1,4 @@
+//This is the workflow action for calling an api
 package api
 
 import (
@@ -12,6 +13,7 @@ import (
 	"github.com/Mrpye/golib/lib"
 )
 
+//Constants for the body data type
 const (
 	BODY_DATA_TYPE_FORM_DATA             = "form-data"
 	BODY_DATA_TYPE_NONE                  = "none"
@@ -25,7 +27,7 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 	//*********************************************
 	//Get the body data to see what type of payload
 	//*********************************************
-	body_data_type, err := w.GetConfigTokenString("body_type", w.Model, true)
+	body_data_type, err := w.GetConfigTokenString("body_type", w.Model, false)
 	if err != nil {
 		return nil, "", err
 	}
@@ -41,7 +43,6 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 	//Handle the body data
 	//********************
 	if body_data_type == BODY_DATA_TYPE_FORM_DATA {
-
 		//****************
 		//Convert the data
 		//****************
@@ -151,7 +152,6 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 			}
 			return strings.NewReader(file_data), "", nil
 		}
-
 	} else if body_data_type == BODY_DATA_TYPE_NONE {
 		//Body Data None
 		return nil, "", nil
@@ -160,7 +160,28 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 	return nil, "", fmt.Errorf("no body_type of type %s found", body_data_type)
 }
 
-func CallApi(w *workflow.Workflow) error {
+// CallApi is the main function for the action
+/*
+- action: api
+	description: "This is an example of calling an API POST request."
+	config:
+		method: POST
+		url: https://gorest.co.in/public/v2/users
+		body_type: raw
+		body: |
+		{"name":"Agent Smith", "gender":"male", "email":"agent.smith@15ce.com", "status":"active"}
+		header_Content-Type: application/json
+		header_Authorization: "Bearer {{get_param `token`}}"
+		result_action: "js"
+		result_js: |
+		function ActionResults(model,result){
+			var obj=JSON.parse(result);
+			store_value("api_result","user_id",obj.id);
+			console(result);
+			return true;
+		}
+*/
+func Action_CallApi(w *workflow.Workflow) error {
 
 	//*********************
 	//Get the config values
@@ -251,7 +272,7 @@ func CallApi(w *workflow.Workflow) error {
 	}
 
 	if w.Verbose > workflow.LOG_INFO {
-		fmt.Printf("file %s", data)
+		fmt.Printf("file %s\n", data)
 	}
 
 	return nil

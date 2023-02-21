@@ -1,4 +1,4 @@
-package context
+package js
 
 import (
 	"strings"
@@ -9,31 +9,39 @@ import (
 
 func Action_RunJS(w *workflow.Workflow) error {
 
-	//*********************
-	//Get the config values
-	//*********************
-	js_file, err := w.GetConfigTokenString("js_file", w.Model, true)
+	code, err := w.GetConfigTokenString("js", w.Model, false)
 	if err != nil {
 		return err
 	}
-	//*****************************
-	//See if we have multiple files
-	//*****************************
-	files := strings.Split(js_file, ";")
-	code := ""
-	for _, o := range files {
-		file_part := o
-		file_data, err := lib.ReadFileToString(file_part)
+
+	if code == "" {
+		//*********************
+		//Get the config values
+		//*********************
+		js_file, err := w.GetConfigTokenString("js_file", w.Model, true)
 		if err != nil {
 			return err
 		}
-		code = file_data + "\n"
+
+		//*****************************
+		//See if we have multiple files
+		//*****************************
+		files := strings.Split(js_file, ";")
+
+		for _, o := range files {
+			file_part := o
+			file_data, err := lib.ReadFileToString(file_part)
+			if err != nil {
+				return err
+			}
+			code = code + file_data + "\n"
+		}
 	}
 	//************
 	//Run our code
 	//************
 	vm := w.CreateJSEngine()
-	vm.Set("w.Model", w.Model)
+	vm.Set("model", w.Model)
 	_, err = vm.RunString(code)
 	if err != nil {
 		return err

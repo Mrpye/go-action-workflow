@@ -1,0 +1,90 @@
+meta_data:
+  name: call-api-example
+  description: This is an example of calling an API.
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: call-api-example
+    actions:
+      - action: api
+        description: "This is an example of calling an API DELETE request."
+        disable: true
+        config:
+          method: DELETE
+          url: "https://gorest.co.in/public/v2/users/533233"
+          body_type: raw
+          header_Content-Type: application/json
+          header_Authorization: "Bearer {{get_param `token`}}"
+          result_action: "js"
+          result_js: |
+            function ActionResults(model,result){
+              console(result);
+              return true;
+            }
+      - action: api
+        description: "This is an example of calling an API POST request."
+        config:
+          method: POST
+          url: https://gorest.co.in/public/v2/users
+          body_type: raw
+          body: |
+            {"name":"Agent Smith", "gender":"male", "email":"agent.smith@15ce.com", "status":"active"}
+          header_Content-Type: application/json
+          header_Authorization: "Bearer {{get_param `token`}}"
+          result_action: "js"
+          result_js: |
+            function ActionResults(model,result){
+              var obj=JSON.parse(result);
+              store_value("api_result","user_id",obj.id);
+              console(result);
+              return true;
+            }
+      - action: api
+        description: "This is an example of calling an API POST request."
+        config:
+          method: PATCH
+          url: "https://gorest.co.in/public/v2/users/{{get_store `api_result` `user_id`}}"
+          body_type: raw
+          body: |
+            {"name":"Agent Smith2", "gender":"male", "email":"agent.smith@15ce.com", "status":"active"}
+          header_Content-Type: application/json
+          header_Authorization: "Bearer {{get_param `token`}}"
+          result_action: "js"
+          result_js: |
+            function ActionResults(model,result){
+              console(result);
+              return true;
+            }
+      - action: api
+        description: "This is an example of calling an API DELETE request."
+        config:
+          method: DELETE
+          url: "https://gorest.co.in/public/v2/users/{{get_store `api_result` `user_id`}}"
+          body_type: raw
+          header_Content-Type: application/json
+          header_Authorization: "Bearer {{get_param `token`}}"
+          result_action: "js"
+          result_js: |
+            function ActionResults(model,result){
+              console(result);
+              return true;
+            }
+      - action: api
+        description: "This is an example of calling an API GET request."
+        config:
+          method: GET
+          url: https://gorest.co.in/public/v2/users
+          header_Content-Type: application/json
+          header_Authorization: "Bearer {{get_param `token`}}"
+          result_action: "js"
+          result_js: |
+            function ActionResults(model,result){
+              console(result);
+              return true;
+            }
+parameters:
+  - key: token
+    value: "{{read_file `../../secret.txt`}}"

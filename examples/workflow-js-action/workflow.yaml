@@ -1,0 +1,27 @@
+meta_data:
+  name: js-example
+  description: This is an example will run some js
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: call-js-example
+    actions:
+      - action: js
+        config:
+          js_file: "./code2.js;./code3.js"
+      - action: js
+        config:
+          js: |
+            console(model.Meta.Name );
+      - action: js
+        config:
+          js_file: "./code1.js"
+
+      
+          
+      
+parameters:
+  

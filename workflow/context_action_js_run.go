@@ -16,6 +16,7 @@ func (m *Workflow) CreateJSEngine() *goja.Runtime {
 	//************************************************
 	vm := goja.New()
 	//vm.Set("target_config", m.GetTargetConfig)
+	//vm.Set("read_file", lib.ReadFileToString)
 	vm.Set("get_param", m.GetParamValue)
 	vm.Set("console", fmt.Println)
 	vm.Set("print_ok", lib.PrintOK)
