@@ -181,7 +181,7 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 			return true;
 		}
 */
-func CallApi(w *workflow.Workflow) error {
+func Action_CallApi(w *workflow.Workflow) error {
 
 	//*********************
 	//Get the config values

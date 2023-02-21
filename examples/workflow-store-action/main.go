@@ -1,15 +1,11 @@
-package tests
+package main
 
 import (
-	"testing"
-
 	"github.com/Mrpye/go-workflow/actions/store"
-	"github.com/Mrpye/go-workflow/actions/tests"
 	"github.com/Mrpye/go-workflow/workflow"
 )
 
-func TestWorkflow(t *testing.T) {
-
+func main() {
 	//*****************
 	//create a workflow
 	//*****************
@@ -20,34 +16,24 @@ func TestWorkflow(t *testing.T) {
 	//**********************************
 	wf.Verbose = workflow.LOG_QUIET
 
-	//*******************
-	//Add a custom action
-	//*******************
-	wf.ActionList["ActionStore"] = store.Action_Store
-	wf.ActionList["ActionTest"] = tests.ActionTest
-	wf.ActionList["ActionFailTest"] = tests.ActionFailTest
-	wf.ActionList["ActionJSAndMap"] = tests.ActionJSAndMap
+	//*****************
+	//Add custom action
+	//*****************
+	wf.ActionList["store"] = store.Action_Store //add the action for Storing data
 
 	//*************************
 	//load the workflow manifest
 	//*************************
-	err := wf.LoadManifest("../examples/full-test-example/workflow.yaml")
+	err := wf.LoadManifest("./workflow.yaml")
 	if err != nil {
 		println(err.Error())
-		return
 	}
 
 	//********************
 	//Run the workflow job
 	//********************
-	err = wf.RunJob("test-example")
+	err = wf.RunJob("store-example")
 	if err != nil {
 		println(err.Error())
-		return
 	}
-
-	if err != nil {
-		t.Error(err)
-	}
-
 }

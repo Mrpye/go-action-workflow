@@ -2,7 +2,7 @@ package store
 
 import "github.com/Mrpye/go-workflow/workflow"
 
-func ActionStore(w *workflow.Workflow) error {
+func Action_Store(w *workflow.Workflow) error {
 	//**********************************
 	//Get a string value from the config
 	//**********************************

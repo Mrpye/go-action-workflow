@@ -3,13 +3,18 @@
 ## Description
 go-workflow allows you to embed a basic workflow engine into your GO projects supporting basic flow operations such as loops, goto, pause and end. you can create custom actions to perform tasks, and using go's template engine you can manipulate values in your workflow manifest. with the ability to run **js** you can manipulate data returned from your actions and store data so that it can be used in later actions. 
 
+---
+
 ## When to use go-workflow
 - go-workflow can be used in your project when you need automate tasks
 - To create automation tooling
 
+---
+
 ## Requirements
 * go 1.8 [https://go.dev/doc/install](https://go.dev/doc/install) to run and install helm-api
 
+---
 
 ## Project folders
 Below is a description helm-api project folders and what they contain
@@ -18,6 +23,8 @@ Below is a description helm-api project folders and what they contain
 | workflow    | go-workflow lib  |
 | examples    | example go-workflow use cases  |
 | actions    | some prebuilt actions that can be included in your workflow  |
+
+---
 
 ## Installation
 You can install go-workflow using the following command
@@ -36,6 +43,8 @@ go get github.com/Mrpye/go-workflow
     import "github.com/Mrpye/go-workflow/workflow"
 ```
 </details>
+
+---
 
 ## go-workflow manifest format
 The go-workflow manifest is a YAML file used to define a workflow and actions to be performed, you can then load this into go-workflow and run a job. see the [`basic-example`](#how-to-use-go-workflow) under **How to use go-workflow** for more information on loading and running workflow manifest file. 
@@ -135,6 +144,8 @@ The parameters section is used to create parameters that can be specified by the
 | *Value    | Default value to be used for this parameter  |
 
 </details>
+
+---
 
 ## Template Engine
 To facilitate the ability to inject values into the manifest go-workflow uses golang's template engine. template tokens that are wrapped with **{{ }}** are used to inject values.You can get more information on the go template [here](https://pkg.go.dev/text/template). go-workflow parses each parameter and if present replaces the token with the required value.
@@ -238,7 +249,9 @@ you can use template functions to manipulate or access data. below is a table of
 
 </details>
 
-# inbuilt actions
+---
+
+## inbuilt actions
 go-workflow comes with some basic actions mainly around handling the flow. each parameter is separated with **;**. You can also use end or goto in the Fail field of the action
 
 |   action        |params| Description  |
@@ -248,8 +261,11 @@ go-workflow comes with some basic actions mainly around handling the flow. each 
 | goto    |[action key] |jump to an action with the matching key |
 | wait-seconds or wait    |[int] |wait for x seconds |
 | wait-minutes    |[int] |wait for x minutes |
-| for    |[variable];[start_value];[end_value] or no params for infinite loop|for loop |
+| for    |[variable];[start_value];[end_value]|for loop |
 | next   |N/A|used withe the for loop to denote the end of the loop |
+
+<details>
+<summary>Examples</summary>
 
 ``` yaml
 
@@ -278,12 +294,209 @@ jobs:
             key: "end_action"
         
 ```
+</details>
 
+---
+
+## Actions available in the package
+To help get you started go-workflow has some Actions that if you choose can be added to the workflow engine.
+
+|   action        |package| Description  |
+|-----------------|-------|-------|
+| CallApi    |actions\api|action for rest api calls |
+| Action_Copy    |actions\file|Copies a file |
+| Action_Rename    |actions\file|Renames a file |
+| Action_Delete    |actions\file|Deletes a file |
+| Action_RunJS    |actions\js|Run java script |
+| Action_Store    |actions\store|Gives the ability to store values is the bucket store |
+
+<details>
+<summary>1. CallApi Action</summary>
+
+This action enables you to make Rest API Calls
+
+**Example:**  examples/workflow-call-api-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| url    |   |target url |
+| method    | POST,GET,PATCH,PUT,DELETE  | |
+| body_type    | none,form-data,raw | |
+| body    |   |body payload data |
+|body_from_file||Allows you to read the body from file|
+| header_    |   |set the headers |
+| result_action    |none,print,js   |what to do with the returned results |
+| result_format    |none,json,yaml,toml,xml,plain   |how to format the result|
+| result_js    |   |js to process the result can be a file or inline |
+
+
+### POST Example
+```yaml
+- action: api
+    description: "This is an example of calling an API POST request."
+    config:
+      method: POST
+      url: https://gorest.co.in/public/v2/users
+      body_type: raw
+      body: |
+        {"name":"Agent Smith", "gender":"male", "email":"agent.smith@15ce.com", "status":"active"}
+      header_Content-Type: application/json
+      header_Authorization: "Bearer {{get_param `token`}}"
+      result_action: "js"
+      result_js: |
+        function ActionResults(model,result){
+          var obj=JSON.parse(result);
+          store_value("api_result","user_id",obj.id);
+          console(result);
+          return true;
+        }
+```
+
+### GET Example
+```yaml
+- action: api
+    description: "This is an example of calling an API GET request."
+    config:
+      method: GET
+      url: https://gorest.co.in/public/v2/users
+      header_Content-Type: application/json
+      header_Authorization: "Bearer {{get_param `token`}}"
+      result_action: "js"
+      result_js: |
+        function ActionResults(model,result){
+          console(result);
+          return true;
+        }
+```
+</details>
+
+<details>
+<summary>2. Copy Action</summary>
+
+This action copies a file
+
+**Example:**  examples/workflow-copy-file-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| source_file    |   |Source file to copy |
+| dest_file    |  | where to copy to (Use fullt path and filename) |
+
+
+
+### Copy Example
+```yaml
+- action: copy
+    config:
+      source_file: "./source_file.txt"
+      dest_file: "./destination_file.txt"
+```
+
+</details>
+
+<details>
+<summary>3. Delete Action</summary>
+
+This action deletes a file
+
+**Example:**  examples/workflow-copy-file-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| source_file    |   |The file to delete |
+
+### Copy Example
+```yaml
+- action: delete
+    config:
+      source_file: "./my_file.txt"
+```
+
+</details>
+
+<details>
+<summary>4. Rename Action</summary>
+
+This action renames a file also acts as a move if your path is different
+
+**Example:**  examples/workflow-copy-file-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| source_file    |   |The file to rename |
+| dest_file    |   |What to name it to (Full path)  |
+
+### Copy Example
+```yaml
+- action: rename
+    config:
+      source_file: "./destination_file.txt"
+      dest_file: "./my_file.txt"
+```
+
+</details>
+
+<details>
+<summary>5. JS Action</summary>
+
+This action runs javascript
+
+**Example:**  examples/workflow-js-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| js    |   |javascript code to run|
+| js_file    |   |read js in from a file |
+
+```yaml
+ actions:
+  - action: js
+    config:
+      js_file: "./code2.js;./code3.js"
+  - action: js
+    config:
+      js: |
+        console(model.Meta.Name );
+  - action: js
+    config:
+      js_file: "./code1.js"
+```
+
+</details>
+
+
+<details>
+<summary>6. Store Action</summary>
+
+This action stores values in the data bucket
+
+**Example:**  examples/workflow-store-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| bucket    |   |the data bucket to use|
+| key    |   |the key to store the value against |
+| value    |   |value to save |
+
+```yaml
+ actions:
+    - action: store
+      config:
+        bucket: "my_data"
+        key: "name"
+        value: "Andrew"
+    - action: "print;{{get_store `my_data` `name`}}"
+```
+
+</details>
+---
 
 ## How to use go-workflow
 The quickest and easiest way to get started is by creating a workflow manifest. you can create a workflow programmatically but it is far easier to write the manifest in a YML file and load it into using the library. 
 
-The [`git repo`](https://github.com/Mrpye/go-workflow) comes with some example that will cover the basics to more advanced examples.
+The [`git repo`](https://github.com/Mrpye/go-workflow) comes with some example that will cover the basics to more advanced features.
+You can find the example in the examples folder
+
 
 <details>
 <summary>1. simple-example</summary>
@@ -1062,22 +1275,25 @@ Cleaning up
 
 </details>
 
+
+---
+
 ## To Do
-- Unit Test
+- Unit Test for actions
 - Documentation the package
 - Add some common actions into the library such as 
-	- Call Rest API
-	- Count and Fail Action for retry
-	- JS Action
 	- Condition Action 
 	- Call Job Function
 - Add the ability to turn a job into a subprocess and use the Call Job Function to start it
+
 --- 
+
 
 ## Some notable 3rd party Libraries
 - [https://github.com/dop251/goja](https://github.com/dop251/goja) JS engine
 
 
+---
 
 ## license
 go-workflow is Apache 2.0 licensed.

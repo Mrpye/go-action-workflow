@@ -1,8 +1,7 @@
 package main
 
 import (
-	"github.com/Mrpye/go-workflow/actions/store"
-	"github.com/Mrpye/go-workflow/actions/tests"
+	"github.com/Mrpye/go-workflow/actions/api"
 	"github.com/Mrpye/go-workflow/workflow"
 )
 
@@ -15,15 +14,12 @@ func main() {
 	//**********************************
 	//Only show errors and print actions
 	//**********************************
-	wf.Verbose = workflow.LOG_INFO
+	wf.Verbose = workflow.LOG_QUIET
 
-	//*******************
-	//Add a custom action
-	//*******************
-	wf.ActionList["ActionStore"] = store.Action_Store
-	wf.ActionList["ActionTest"] = tests.ActionTest
-	wf.ActionList["ActionFailTest"] = tests.ActionFailTest
-	wf.ActionList["ActionJSAndMap"] = tests.ActionJSAndMap
+	//*****************
+	//Add custom action
+	//*****************
+	wf.ActionList["api"] = api.Action_CallApi //add the action for calling APIs
 
 	//*************************
 	//load the workflow manifest
@@ -31,18 +27,13 @@ func main() {
 	err := wf.LoadManifest("./workflow.yaml")
 	if err != nil {
 		println(err.Error())
-		return
 	}
 
 	//********************
 	//Run the workflow job
 	//********************
-	err = wf.RunJob("test-example")
+	err = wf.RunJob("call-api-example")
 	if err != nil {
 		println(err.Error())
-		return
 	}
-
-	println("Test Passed")
-
 }
