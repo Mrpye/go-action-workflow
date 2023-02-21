@@ -1,0 +1,23 @@
+meta_data:
+    name: simple-example
+    description: This is a simple example workflow that demonstrates the basic features of the workflow engine.
+    version: 1.0.0
+    author: Andrew Pye
+    contact: 
+    create_date: "2022-11-13 11:39:44"
+    update_date: "2022-11-13 11:39:44"
+    vars: 
+      example_value: "This is an example value"
+jobs:
+    - key: simple-example
+      title:  Simple example
+      description:  This job how to use loops and variables
+      actions:
+        - action: "print; {{ .Meta.Vars.example_value }}"
+        - action: "for;i;0;{{ get_param `times_to_loop`}}"
+        - action: "print; Hello World {{ get_stk_val `i` }}"
+        - action: "next"
+parameters: 
+    - key: times_to_loop
+      value: 10
+    

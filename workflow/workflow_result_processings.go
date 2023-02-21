@@ -111,7 +111,7 @@ func (m *Workflow) ActionProcessResults(data interface{}) error {
 		//**********
 		//Run the js
 		//**********
-		vm := m.createJSEngine()
+		vm := m.CreateJSEngine()
 		_, err = vm.RunString(js_code)
 		if err != nil {
 			return err

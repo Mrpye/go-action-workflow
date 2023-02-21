@@ -8,40 +8,8 @@ import (
 	"github.com/dop251/goja"
 )
 
-/*func (m *Workflow) action_RunJS() error {
-	//*********************
-	//Get the config values
-	//*********************
-	js_file, err := m.GetConfigTokenString("js_file", m.Model, true)
-	if err != nil {
-		return err
-	}
-	//*****************************
-	//See if we have multiple files
-	//*****************************
-	files := strings.Split(js_file, ";")
-	code := ""
-	for _, o := range files {
-		file_data, err := lib.ReadFileToString(o)
-		if err != nil {
-			return err
-		}
-		code = file_data + "\n"
-	}
-	//************
-	//Run our code
-	//************
-	vm := m.createJSEngine()
-	vm.Set("model", m.Model)
-	_, err = vm.RunString(code)
-	if err != nil {
-		return err
-	}
-	return nil
-}*/
-
 //Set up the js engine
-func (m *Workflow) createJSEngine() *goja.Runtime {
+func (m *Workflow) CreateJSEngine() *goja.Runtime {
 
 	//************************************************
 	//Setup the js engine with all the passed function
