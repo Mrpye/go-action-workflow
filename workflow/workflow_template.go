@@ -202,7 +202,7 @@ func (m *Workflow) GetTokenString(value interface{}, model *TemplateData) (strin
 		if err != nil {
 			return val, err
 		}
-		return new_val, nil
+		return fmt.Sprintf("%v", new_val), nil
 	default:
 		// User defined types work as well
 		return val.(string), nil
@@ -291,7 +291,7 @@ func (m *Workflow) GetTokenInt(value interface{}, model *TemplateData) (int, err
 		if err != nil {
 			return 0, err
 		}
-		int_val, err := strconv.Atoi(new_val)
+		int_val, err := strconv.Atoi(fmt.Sprintf("%v", new_val))
 		if err != nil {
 			return 0, err
 		}
@@ -311,6 +311,7 @@ func (m *Workflow) GetTemplateFuncMap() template.FuncMap {
 	//Create a function map
 	//*********************
 	funcMap := template.FuncMap{
+		"read_file":   lib.ReadFileToString,
 		"base64enc":   lib.Base64EncString,
 		"base64dec":   lib.Base64DecString,
 		"gzip_base64": lib.GzipBase64String,

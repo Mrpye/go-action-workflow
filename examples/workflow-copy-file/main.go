@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Mrpye/go-workflow/actions/api"
+	"github.com/Mrpye/go-workflow/actions/file"
 	"github.com/Mrpye/go-workflow/workflow"
 )
 
@@ -19,8 +19,9 @@ func main() {
 	//*****************
 	//Add custom action
 	//*****************
-	wf.ActionList["api"] = api.CallApi //add the action for calling APIs
-
+	wf.ActionList["copy"] = file.Action_Copy     //add the action for calling APIs
+	wf.ActionList["delete"] = file.Action_Delete //add the action for calling APIs
+	wf.ActionList["rename"] = file.Action_Rename //add the action for calling APIs
 	//*************************
 	//load the workflow manifest
 	//*************************

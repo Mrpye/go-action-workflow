@@ -1,0 +1,24 @@
+meta_data:
+  name: copy-example
+  description: This is an example will copy a file
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: call-api-example
+    actions:
+      - action: copy
+        config:
+          source_file: "./source_file.txt"
+          dest_file: "./destination_file.txt"
+      - action: rename
+        config:
+          source_file: "./destination_file.txt"
+          dest_file: "./my_file.txt"
+      - action: delete
+        config:
+          source_file: "./my_file.txt"
+parameters:
+  

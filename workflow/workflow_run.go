@@ -108,7 +108,7 @@ func (m *Workflow) executeJob(key string) error {
 		//Parse any variable in the action
 		//********************************
 		lowercase_action, err := m.ParseToken(m.Model, current_action.Action)
-		action_parts := strings.Split(lowercase_action, ";")
+		action_parts := strings.Split(fmt.Sprintf("%v", lowercase_action), ";")
 		action_parts[0] = strings.ToLower(action_parts[0])
 		if err != nil {
 			return err
@@ -227,8 +227,8 @@ func (m *Workflow) executeJob(key string) error {
 				//************************************
 				//lets see if to end or goto an action
 				//************************************
-				lowercase_fail, err := m.ParseToken(m.Model, current_action.Fail)
-				fail_parts := strings.Split(lowercase_fail, ";")
+				lowercase_fail, _ := m.ParseToken(m.Model, current_action.Fail)
+				fail_parts := strings.Split(fmt.Sprintf("%v", lowercase_fail), ";")
 				fail_parts[0] = strings.ToLower(fail_parts[0])
 				if fail_parts[0] == "end" || fail_parts[0] == "" {
 					return err
