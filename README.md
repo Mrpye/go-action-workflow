@@ -225,6 +225,7 @@ you can use template functions to manipulate or access data. below is a table of
 
 |   function        |params| Description  | 
 |-----------------|-------|-------|
+| read_file  |[string]|Reads a text file|
 | base64enc    | [string]|base64 encode a string |
 | base64dec    |[string] |base64 decode a string |
 | gzip_base64    |[string] |zip a string and base 64 encode|
