@@ -1,6 +1,6 @@
 package store
 
-import "github.com/Mrpye/go-workflow/workflow"
+import "github.com/Mrpye/go-action-workflow/workflow"
 
 func Action_Store(w *workflow.Workflow, m *workflow.TemplateData) error {
 

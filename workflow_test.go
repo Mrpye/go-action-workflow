@@ -3,12 +3,12 @@ package tests
 import (
 	"testing"
 
-	"github.com/Mrpye/go-workflow/actions/condition"
-	"github.com/Mrpye/go-workflow/actions/parallel_workflow"
-	"github.com/Mrpye/go-workflow/actions/store"
-	"github.com/Mrpye/go-workflow/actions/sub_workflow"
-	"github.com/Mrpye/go-workflow/actions/tests"
-	"github.com/Mrpye/go-workflow/workflow"
+	"github.com/Mrpye/go-action-workflow/actions/condition"
+	"github.com/Mrpye/go-action-workflow/actions/parallel_workflow"
+	"github.com/Mrpye/go-action-workflow/actions/store"
+	"github.com/Mrpye/go-action-workflow/actions/sub_workflow"
+	"github.com/Mrpye/go-action-workflow/actions/tests"
+	"github.com/Mrpye/go-action-workflow/workflow"
 )
 
 func TestWorkflow(t *testing.T) {

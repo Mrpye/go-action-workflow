@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Mrpye/go-workflow/workflow"
+	"github.com/Mrpye/go-action-workflow/workflow"
 )
 
 func ActionJSAndMap(w *workflow.Workflow, m *workflow.TemplateData) error {

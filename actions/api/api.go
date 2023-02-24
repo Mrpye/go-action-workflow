@@ -9,7 +9,7 @@ import (
 	"mime/multipart"
 	"strings"
 
-	"github.com/Mrpye/go-workflow/workflow"
+	"github.com/Mrpye/go-action-workflow/workflow"
 	"github.com/Mrpye/golib/lib"
 )
 

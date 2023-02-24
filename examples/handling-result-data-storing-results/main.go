@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 
-	"github.com/Mrpye/go-workflow/workflow"
+	"github.com/Mrpye/go-action-workflow/workflow"
 )
 
 func main() {

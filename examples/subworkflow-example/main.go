@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/Mrpye/go-workflow/actions/store"
-	"github.com/Mrpye/go-workflow/actions/sub_workflow"
-	"github.com/Mrpye/go-workflow/workflow"
+	"github.com/Mrpye/go-action-workflow/actions/store"
+	"github.com/Mrpye/go-action-workflow/actions/sub_workflow"
+	"github.com/Mrpye/go-action-workflow/workflow"
 )
 
 func main() {

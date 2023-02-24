@@ -1,4 +1,4 @@
-module github.com/Mrpye/go-workflow
+module github.com/Mrpye/go-action-workflow
 
 go 1.18
 

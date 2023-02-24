@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Mrpye/go-workflow/workflow"
+	"github.com/Mrpye/go-action-workflow/workflow"
 )
 
 // Action_Copy is a custom action that copies a file
