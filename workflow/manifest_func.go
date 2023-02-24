@@ -2,6 +2,8 @@ package workflow
 
 import (
 	"strings"
+
+	go_data_chain "github.com/Mrpye/go-data-chain"
 )
 
 func (m *Manifest) ParameterExists(key string, app_profile string) bool {
@@ -14,7 +16,7 @@ func (m *Manifest) ParameterExists(key string, app_profile string) bool {
 }
 
 //get the parameter
-func (m *Manifest) GetParameter(key string, app_profile string) *Parameter {
+func (m *Manifest) GetParameter(key string) *Parameter {
 	for _, o := range m.Parameters {
 		if o.Key == strings.ToLower(key) {
 			return &o
@@ -28,6 +30,13 @@ func (m *Manifest) GetJob(key string) *Job {
 		if o.Key == strings.ToLower(key) {
 			return &m.Jobs[i]
 		}
+	}
+	return nil
+}
+
+func (m *Manifest) DataModel() *go_data_chain.Data {
+	if m.Data != nil {
+		return go_data_chain.CreateDataChain(m.Data)
 	}
 	return nil
 }

@@ -22,12 +22,12 @@ const (
 	BODY_DATA_TYPE_X_WWW_FORM_URLENCODED = "x-www-form-urlencoded"
 )
 
-func create_payload(w *workflow.Workflow) (interface{}, string, error) {
+func create_payload(w *workflow.Workflow, m *workflow.TemplateData) (interface{}, string, error) {
 	//TODO need to add raw type
 	//*********************************************
 	//Get the body data to see what type of payload
 	//*********************************************
-	body_data_type, err := w.GetConfigTokenString("body_type", w.Model, false)
+	body_data_type, err := w.GetConfigTokenString("body_type", m, false)
 	if err != nil {
 		return nil, "", err
 	}
@@ -46,7 +46,7 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 		//****************
 		//Convert the data
 		//****************
-		i_body := w.Model.CurrentAction.GetConfig("body")
+		i_body := m.CurrentAction.GetConfig("body")
 		//TODO:Need to check of accepted type see if yaml
 		data, err := json.Marshal(i_body)
 		if err != nil {
@@ -63,7 +63,7 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 		//Read the data from js
 		//*********************
 		if read_body_js {
-			body_js, err := w.GetConfigTokenString("body_from_file", w.Model, false)
+			body_js, err := w.GetConfigTokenString("body_from_file", m, false)
 			if err != nil {
 				return nil, "", err
 			}
@@ -90,7 +90,7 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 		//Lets replace any tokens
 		//***********************
 		for i := range form_data {
-			parsed_str, err := w.ParseToken(w.Model, string(form_data[i].Value))
+			parsed_str, err := w.ParseToken(m, string(form_data[i].Value))
 			if err != nil {
 				return nil, "", err
 			}
@@ -114,20 +114,20 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 		}
 		return payload, writer.FormDataContentType(), nil
 	} else if body_data_type == BODY_DATA_TYPE_RAW {
-		i_body := w.Model.CurrentAction.GetConfig("body")
+		i_body := m.CurrentAction.GetConfig("body")
 		read_body_js := false
 		switch val := i_body.(type) {
 		case string:
 			if val == "" {
 				read_body_js = true
 			}
-			val, err := w.ParseToken(w.Model, string(val))
+			val, err := w.ParseToken(m, string(val))
 			if err != nil {
 				return nil, "", err
 			}
 			return strings.NewReader(val), "", nil
 		case map[string]interface{}:
-			val = w.ParseInterfaceMap(w.Model, val)
+			val = w.ParseInterfaceMap(m, val)
 			data, err := json.Marshal(val)
 			if err != nil {
 				return nil, "", err
@@ -135,7 +135,7 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 			return bytes.NewReader(data), "", nil
 		}
 		if read_body_js {
-			body_js, err := w.GetConfigTokenString("body_from_file", w.Model, false)
+			body_js, err := w.GetConfigTokenString("body_from_file", m, false)
 			if err != nil {
 				return nil, "", err
 			}
@@ -146,7 +146,7 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 			if err != nil {
 				return nil, "", err
 			}
-			file_data, err = w.ParseToken(w.Model, file_data)
+			file_data, err = w.ParseToken(m, file_data)
 			if err != nil {
 				return nil, "", err
 			}
@@ -174,29 +174,29 @@ func create_payload(w *workflow.Workflow) (interface{}, string, error) {
 		header_Authorization: "Bearer {{get_param `token`}}"
 		result_action: "js"
 		result_js: |
-		function ActionResults(model,result){
+		function ActionResults(m,result){
 			var obj=JSON.parse(result);
 			store_value("api_result","user_id",obj.id);
 			console(result);
 			return true;
 		}
 */
-func Action_CallApi(w *workflow.Workflow) error {
+func Action_CallApi(w *workflow.Workflow, m *workflow.TemplateData) error {
 
 	//*********************
 	//Get the config values
 	//*********************
-	method, err := w.GetConfigTokenString("method", w.Model, true)
+	method, err := w.GetConfigTokenString("method", m, true)
 	if err != nil {
 		return err
 	}
 
-	url, err := w.GetConfigTokenString("url", w.Model, true)
+	url, err := w.GetConfigTokenString("url", m, true)
 	if err != nil {
 		return err
 	}
 
-	ignore_ssl, err := w.GetConfigTokenBool("ignore_ssl", w.Model, false)
+	ignore_ssl, err := w.GetConfigTokenBool("ignore_ssl", m, false)
 	if err != nil {
 		return err
 	}
@@ -205,13 +205,13 @@ func Action_CallApi(w *workflow.Workflow) error {
 	//Deal with the headers
 	//*********************
 	var headers []lib.Header
-	for k, e := range w.Model.CurrentAction.Config {
+	for k, e := range m.CurrentAction.Config {
 		if strings.Contains(k, "header_") {
 			key := strings.ReplaceAll(k, "header_", "")
 			//******************
 			//Replace the tokens
 			//******************
-			value, err := w.ParseToken(w.Model, string(e.(string)))
+			value, err := w.ParseToken(m, string(e.(string)))
 			if err != nil {
 				return err
 			}
@@ -225,7 +225,7 @@ func Action_CallApi(w *workflow.Workflow) error {
 	//******************
 	//Create the payload
 	//******************
-	payload, content_type, err := create_payload(w)
+	payload, content_type, err := create_payload(w, m)
 	if err != nil {
 		return err
 	}
@@ -266,7 +266,7 @@ func Action_CallApi(w *workflow.Workflow) error {
 	//*******************
 	//Process the results
 	//*******************
-	err = w.ActionProcessResults(string(data))
+	err = w.ActionProcessResults(m, string(data))
 	if err != nil {
 		return err
 	}

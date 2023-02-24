@@ -1,0 +1,28 @@
+meta_data:
+  name: store-example
+  description: This is an example of how to use the store action
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: custom-example
+    actions:
+      - action: "print; **From the custom action**"
+      - action:  custom
+      - action: "print; **From the template**"
+      - action: "print; {{(get_data `items`).GetArrayCount }}"
+      - action: "for;i;0;{{minus (get_data `items`).GetArrayCount 1 }}"
+      - action: "print;-{{(index .Manifest.Data.items (get_stk_val `i`)).msg}}"
+      - action: "next"
+data:
+  items:
+    - msg: "item 1"
+    - msg: "item 2"
+    - msg: "item 3"
+    - msg: "item 4"
+    - msg: "item 5"
+  data_test: "y"
+parameters:
+  

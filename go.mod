@@ -11,6 +11,8 @@ require (
 )
 
 require (
+	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
+	github.com/Mrpye/go-data-chain v0.1.0 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

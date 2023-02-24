@@ -43,11 +43,15 @@ func main() {
 //**************************
 //print will print a message
 //**************************
-func MultiPrint(w *workflow.Workflow) error {
+func MultiPrint(w *workflow.Workflow, m *workflow.TemplateData) error {
+	//**********************************************
+	//Get the model if m is passed then its parallel
+	//**********************************************
+
 	//*******************************
 	//Get a map value from the config
 	//*******************************
-	map_value, err := w.GetConfigTokenMap("map_value", w.Model, true)
+	map_value, err := w.GetConfigTokenMap("map_value", m, true)
 	if err != nil {
 		return err
 	}
@@ -63,7 +67,7 @@ func MultiPrint(w *workflow.Workflow) error {
 	//***********************************
 	//This function processes the results
 	//***********************************
-	err = w.ActionProcessResults(string(b))
+	err = w.ActionProcessResults(m, string(b))
 	if err != nil {
 		return err
 	}

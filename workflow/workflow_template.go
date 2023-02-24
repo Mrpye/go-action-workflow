@@ -36,6 +36,7 @@ func (m *Workflow) CreateTemplateData(current_action *Action) *TemplateData {
 		CurrentAction: current_action,
 		//CurrentTarget: target,
 	}
+
 }
 
 // GetStackVariable gets the value of a variable from the stack
@@ -333,7 +334,9 @@ func (m *Workflow) GetTemplateFuncMap() template.FuncMap {
 		"divide":      lib.Divide,
 		"get_stk_val": m.GetStackVariable,       //get stack variable
 		"get_param":   m.GetParamValue,          //Gets the parameter value
+		"get_input":   m.GetInputValue,          //Gets the input value
 		"get_store":   m.GetValueFromDataBucket, //Gets the value from the data bucket
+		"get_data":    m.GetDataItem,            //Get the custom item
 	}
 	return funcMap
 }

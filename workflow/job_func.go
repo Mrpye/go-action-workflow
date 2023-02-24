@@ -1,8 +1,27 @@
 package workflow
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
-// G
+//Returns input
+func (m *Job) GetInput(key string) *Parameter {
+	if val, ok := m.Inputs[key]; ok {
+		return &val
+	}
+	return nil
+}
+
+func (m *Job) SetInputAnswer(key string, value interface{}) error {
+	if val, ok := m.Inputs[key]; ok {
+		val.SetAnswer(value)
+		m.Inputs[key] = val
+		return nil
+	}
+	return fmt.Errorf("cannot find input with key %s", key)
+}
+
 func (m *Job) GetKeyIndex(key string) int {
 	for i, o := range m.Actions {
 		if strings.EqualFold(o.Key, key) {

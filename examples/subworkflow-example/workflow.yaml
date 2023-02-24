@@ -1,0 +1,48 @@
+meta_data:
+  name: sub-workflow-example
+  description: This is a example uses the sub-workflow action to run a workflow from another workflow
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: main-workflow-example
+    title: Main Workflow
+    description: This is the main workflow
+    actions:
+      - action: "print; This is the main workflow"
+      - action: "sub-workflow"
+        config:
+          job: sub-workflow-example
+          inputs:
+            value2: "This is the second value"
+            value3: "This is the third value"
+      - action: "print; {{get_store `my_data` `my_data`}}"
+  - key: sub-workflow-example
+    title: Sub Workflow
+    description: This is the Sub workflow
+    is_sub_workflow: true
+    inputs:
+      value1: 
+        title: Number of times to loop
+        value: "{{get_param `times_to_loop`}}"
+      value2:
+        title: "Another value2"
+        value: 
+      value3:
+        title: "Another value3"
+        value: 
+    actions:
+      - action: "print; {{get_input `value1`}}"
+      - action: "print; {{get_input `value2`}}"
+      - action: "print; {{get_input `value3`}}"
+      - action: store
+        config:
+          bucket: "my_data"
+          key: my_data
+          value: "this is my data"
+
+parameters:
+  - key: times_to_loop
+    value: 1

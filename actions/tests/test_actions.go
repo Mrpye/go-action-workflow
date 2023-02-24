@@ -10,11 +10,12 @@ import (
 	"github.com/Mrpye/go-workflow/workflow"
 )
 
-func ActionJSAndMap(w *workflow.Workflow) error {
+func ActionJSAndMap(w *workflow.Workflow, m *workflow.TemplateData) error {
+
 	//*******************************
 	//Get a map value from the config
 	//*******************************
-	map_value, err := w.GetConfigTokenMap("map_value", w.Model, true)
+	map_value, err := w.GetConfigTokenMap("map_value", m, true)
 	if err != nil {
 		return err
 	}
@@ -30,14 +31,17 @@ func ActionJSAndMap(w *workflow.Workflow) error {
 	//***********************************
 	//This function processes the results
 	//***********************************
-	err = w.ActionProcessResults(string(b))
+	err = w.ActionProcessResults(m, string(b))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func ActionTest(w *workflow.Workflow) error {
+func ActionTest(w *workflow.Workflow, m *workflow.TemplateData) error {
+	//**********************************************
+	//Get the model if m is passed then its parallel
+	//**********************************************
 	//****************************************************************
 	//This will test the data and return an error if it is not correct
 	//****************************************************************
@@ -50,6 +54,33 @@ func ActionTest(w *workflow.Workflow) error {
 	if err != nil {
 		return err
 	}
+
+	//*******************
+	//Action test
+	//*******************
+	err = MapCheck(test_data, "sub_workflow_value1", "sub-workflow first value")
+	if err != nil {
+		return err
+	}
+	err = MapCheck(test_data, "sub_workflow_value2", "sub-workflow second value")
+	if err != nil {
+		return err
+	}
+	err = MapCheck(test_data, "sub_workflow_value3", "sub-workflow third value")
+	if err != nil {
+		return err
+	}
+
+	err = MapCheck(test_data, "store_test_key", "This is a value from store test")
+	if err != nil {
+		return err
+	}
+
+	err = MapCheck(test_data, "condition_test", "pass")
+	if err != nil {
+		return err
+	}
+
 	err = MapCheck(test_data, "js_map_value2", "THIS IS A TEST STRING")
 	if err != nil {
 		return err
@@ -155,6 +186,9 @@ func MapCheck(map_data map[string]interface{}, key string, value any) error {
 	}
 	return nil
 }
-func ActionFailTest(w *workflow.Workflow) error {
+func ActionFailTest(w *workflow.Workflow, m *workflow.TemplateData) error {
+	//**********************************************
+	//Get the model if m is passed then its parallel
+	//**********************************************
 	return fmt.Errorf("this action should not run")
 }

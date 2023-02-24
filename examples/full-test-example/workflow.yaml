@@ -9,10 +9,68 @@ meta_data:
   vars:
     example_value: "This is an example value"
 jobs:
+  - key: sub-workflow-test
+    is_sub_workflow: true
+    inputs:
+      value1: 
+        value: 
+      value2:
+        value: 
+      value3:
+        value: 
+    actions:
+      - action: store
+        config:
+          bucket: "test"
+          key: "sub_workflow_value1"
+          value: "{{get_input `value1`}}"
+      - action: store
+        config:
+          bucket: "test"
+          key: "sub_workflow_value2"
+          value: "{{get_input `value2`}}"
+      - action: store
+        config:
+          bucket: "test"
+          key: "sub_workflow_value3"
+          value: "{{get_input `value3`}}"
   - key: test-example
     title: Simple example
     description: This job will test features of the workflow engine
     actions:
+      - action: "parallel"
+        config:
+          actions:
+            - action: "store"
+              config:
+                bucket: "test"
+                key: "store_test_key"
+                value: "This is a value from store test"
+            - action: "wait-seconds;2"
+            - action: "sub-workflow"
+              config:
+                job: sub-workflow-test
+                inputs:
+                  value1: "sub-workflow first value"
+                  value2: "sub-workflow second value"
+                  value3: "sub-workflow third value"
+            - action: condition
+              config:
+                condition: "{{ get_param `times_to_loop`}} > 1 && {{ get_param `times_to_loop`}} < 5"
+                pass: condition_pass
+                fail: "end"
+      - action: store
+        config:
+          bucket: "test"
+          key: "condition_test"
+          value: fail
+      - action: "fail"
+      - action: store
+        key: condition_pass
+        config:
+          bucket: "test"
+          key: "condition_test"
+          value: pass
       - action: ActionJSAndMap
         config:
           map_value:

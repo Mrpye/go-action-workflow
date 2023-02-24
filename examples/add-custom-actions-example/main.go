@@ -45,32 +45,33 @@ func main() {
 //**************************
 //print will print a message
 //**************************
-func MultiPrint(w *workflow.Workflow) error {
+func MultiPrint(w *workflow.Workflow, m *workflow.TemplateData) error {
+
 	//**********************************
 	//Get a string value from the config
 	//**********************************
-	string_value, err := w.GetConfigTokenString("string_value", w.Model, true)
+	string_value, err := w.GetConfigTokenString("string_value", m, true)
 	if err != nil {
 		return err
 	}
 	//*******************************
 	//Get a int value from the config
 	//*******************************
-	int_value, err := w.GetConfigTokenInt("int_value", w.Model, true)
+	int_value, err := w.GetConfigTokenInt("int_value", m, true)
 	if err != nil {
 		return err
 	}
 	//********************************
 	//Get a bool value from the config
 	//********************************
-	bool_value, err := w.GetConfigTokenBool("bool_value", w.Model, true)
+	bool_value, err := w.GetConfigTokenBool("bool_value", m, true)
 	if err != nil {
 		return err
 	}
 	//*******************************
 	//Get a map value from the config
 	//*******************************
-	map_value, err := w.GetConfigTokenMap("map_value", w.Model, true)
+	map_value, err := w.GetConfigTokenMap("map_value", m, true)
 	if err != nil {
 		return err
 	}

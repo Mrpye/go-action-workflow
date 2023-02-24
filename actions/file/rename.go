@@ -15,17 +15,17 @@ import (
 		source_file: the file to copy
 		dest_file: 	the destination file
 */
-func Action_Rename(w *workflow.Workflow) error {
+func Action_Rename(w *workflow.Workflow, m *workflow.TemplateData) error {
 
 	//*********************
 	//Get the config values
 	//*********************
-	source_file, err := w.GetConfigTokenString("source_file", w.Model, true)
+	source_file, err := w.GetConfigTokenString("source_file", m, true)
 	if err != nil {
 		return err
 	}
 
-	dest_file, err := w.GetConfigTokenString("dest_file", w.Model, true)
+	dest_file, err := w.GetConfigTokenString("dest_file", m, true)
 	if err != nil {
 		return err
 	}

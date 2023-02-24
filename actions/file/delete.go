@@ -15,12 +15,12 @@ import (
 		source_file: the file to copy
 		dest_file: 	the destination file
 */
-func Action_Delete(w *workflow.Workflow) error {
+func Action_Delete(w *workflow.Workflow, m *workflow.TemplateData) error {
 
 	//*********************
 	//Get the config values
 	//*********************
-	source_file, err := w.GetConfigTokenString("source_file", w.Model, true)
+	source_file, err := w.GetConfigTokenString("source_file", m, true)
 	if err != nil {
 		return err
 	}

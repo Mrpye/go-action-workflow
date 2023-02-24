@@ -19,6 +19,11 @@ type loopStack struct {
 	stackList []loop
 }
 
+func CreateLoopStack() loopStack {
+	workflow := loopStack{}
+	return workflow
+}
+
 func (m *loopStack) Increment() (bool, error) {
 	if len(m.stackList) > 0 {
 		index := len(m.stackList) - 1

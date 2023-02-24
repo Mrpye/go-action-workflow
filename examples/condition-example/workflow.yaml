@@ -1,0 +1,29 @@
+meta_data:
+    name: condition-example
+    description: This is a example we use an action to evaluate a condition then use the result to decide what to do next
+    version: 1.0.0
+    author: Andrew Pye
+    contact: 
+    create_date: "2022-11-13 11:39:44"
+    update_date: "2022-11-13 11:39:44"
+jobs:
+    - key: condition-example
+      title:  Simple example
+      description:  This job how to use loops and variables
+      actions:
+        - action: condition
+          config:
+            condition: "{{ get_param `times_to_loop`}} > 1 && {{ get_param `times_to_loop`}} < 5"
+            pass: A
+            fail: B
+        - action: end
+        - action: "print; This is A"
+          key: A
+        - action: end
+        - action: "print; This is B"
+          key: B
+        
+parameters: 
+    - key: times_to_loop
+      value: 1
+    

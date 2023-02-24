@@ -1,10 +1,12 @@
 package workflow
 
 type Job struct {
-	Key         string   `json:"key" yaml:"key"`
-	Title       string   `json:"title" yaml:"title"`
-	Description string   `json:"description" yaml:"description"`
-	Actions     []Action `json:"actions" yaml:"actions"`
+	Key           string               `json:"key" yaml:"key"`
+	Title         string               `json:"title" yaml:"title"`
+	Description   string               `json:"description" yaml:"description"`
+	Actions       []Action             `json:"actions" yaml:"actions"`
+	IsSubWorkflow bool                 `json:"is_sub_workflow" yaml:"is_sub_workflow"`
+	Inputs        map[string]Parameter `json:"inputs" yaml:"inputs"`
 }
 
 type JobOption func(*Job)

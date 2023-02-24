@@ -1,3 +1,7 @@
+github.com/Knetic/govaluate v3.0.0+incompatible h1:7o6+MAPhYTCF0+fdvoz1xDedhRb4f6s9Tn1Tt7/WTEg=
+github.com/Knetic/govaluate v3.0.0+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
+github.com/Mrpye/go-data-chain v0.1.0 h1:90PbvZsWmF5sq5/0IEYGWoSekBznjxnxOMoJuU9/AV8=
+github.com/Mrpye/go-data-chain v0.1.0/go.mod h1:GT1IWDuL1od961vzsLiQ+FMPFCEm/4xMatq6xhSs3wg=
 github.com/Mrpye/golib v0.1.1 h1:WCgH69BM9vm4MSt90lkow3m3jC7ZV64GmTZKQrelm3U=
 github.com/Mrpye/golib v0.1.1/go.mod h1:tp6WdmrinrBMkIDSxZd9aRU7Xi9IQoUU/cV5HhDQw2Y=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=

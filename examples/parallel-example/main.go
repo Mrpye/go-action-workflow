@@ -1,18 +1,15 @@
-package tests
+package main
 
 import (
-	"testing"
-
+	"github.com/Mrpye/go-workflow/actions/api"
 	"github.com/Mrpye/go-workflow/actions/condition"
 	"github.com/Mrpye/go-workflow/actions/parallel_workflow"
 	"github.com/Mrpye/go-workflow/actions/store"
 	"github.com/Mrpye/go-workflow/actions/sub_workflow"
-	"github.com/Mrpye/go-workflow/actions/tests"
 	"github.com/Mrpye/go-workflow/workflow"
 )
 
-func TestWorkflow(t *testing.T) {
-
+func main() {
 	//*****************
 	//create a workflow
 	//*****************
@@ -22,39 +19,26 @@ func TestWorkflow(t *testing.T) {
 	//Only show errors and print actions
 	//**********************************
 	wf.Verbose = workflow.LOG_QUIET
-
-	//*******************
-	//Add a custom action
-	//*******************
-	wf.ActionList["ActionStore"] = store.Action_Store
-	wf.ActionList["ActionTest"] = tests.ActionTest
-	wf.ActionList["ActionFailTest"] = tests.ActionFailTest
-	wf.ActionList["ActionJSAndMap"] = tests.ActionJSAndMap
 	wf.ActionList["parallel"] = parallel_workflow.Action_Parallel
 	wf.ActionList["sub-workflow"] = sub_workflow.Action_SubWorkflow
 	wf.ActionList["store"] = store.Action_Store
+	wf.ActionList["api"] = api.Action_CallApi               //add the action for calling APIs
 	wf.ActionList["condition"] = condition.Action_Condition //add the action for calling APIs
 
 	//*************************
 	//load the workflow manifest
 	//*************************
-	err := wf.LoadManifest("examples/full-test-example/workflow.yaml")
+	err := wf.LoadManifest("./workflow.yaml")
+
 	if err != nil {
-		t.Error(err)
-		return
+		println(err.Error())
 	}
 
 	//********************
 	//Run the workflow job
 	//********************
-	err = wf.RunJob("test-example")
+	err = wf.RunJob("parallel-example")
 	if err != nil {
-		t.Error(err)
-		return
+		println(err.Error())
 	}
-
-	if err != nil {
-		t.Error(err)
-	}
-
 }

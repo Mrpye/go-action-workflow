@@ -1,0 +1,75 @@
+meta_data:
+  name: parallel-example
+  description: This actions will run actions in parallel
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: parallel-example
+    actions:
+      - action: "parallel"
+        config:
+          actions:
+            - action: "wait-seconds;2"
+            - action: "wait-seconds;10"
+            - action: "sub-workflow"
+              config:
+                job: sub-workflow-example
+                inputs:
+                  value1: "This is the first value"
+                  value2: "This is the second value"
+                  value3: "This is the third value"
+            - action: api
+              description: "This is an example of calling an API GET request."
+              config:
+                method: GET
+                url: https://gorest.co.in/public/v2/users
+                header_Content-Type: application/json
+                header_Authorization: "Bearer {{get_param `token`}}"
+                result_action: "js"
+                result_js: |
+                  function ActionResults(model,result){
+                    console(result);
+                    return true;
+                  }
+            - action: condition
+              config:
+                condition: "{{ get_param `times_to_loop`}} > 1 && {{ get_param `times_to_loop`}} < 5"
+                pass: skipped
+                fail: failed_part
+      - action: "print; This should not be printed after the parallel actions"
+      - action: "print; this is the skipped"
+        key: skipped
+      - action: "print; This is the store data {{get_store `my_data` `my_data`}}"
+      - action: end
+      - action: "print; this is the failed part"
+        key: failed_part
+
+
+  - key: sub-workflow-example
+    title: Sub Workflow
+    description: This is the Sub workflow
+    is_sub_workflow: true
+    inputs:
+      value1: 
+        value: 
+      value2:
+        value: 
+      value3:
+        value: 
+    actions:
+      - action: "print; {{get_input `value1`}}"
+      - action: "print; {{get_input `value2`}}"
+      - action: "print; {{get_input `value3`}}"
+      - action: store
+        config:
+          bucket: "my_data"
+          key: my_data
+          value: "this is my data"
+parameters:
+  - key: times_to_loop
+    value: 3
+  - key: token
+    value: "{{read_file `../../secret.txt`}}"

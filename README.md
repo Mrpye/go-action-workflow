@@ -247,11 +247,119 @@ you can use template functions to manipulate or access data. below is a table of
 | get_stk_val    | [loop variable name string]|used to access the value in a loop variable |
 | get_param    | [string]|get a value from a parameter specify the key value |
 | get_store    | [key string] [name string]|get a value from the bucket store|
+| get_data    | [key string]|Allows you to access the custom data from the manifest|
+</details>
+
+---
+## Custom data
+
+You can add arbitrary custom data to the manifest and then use this data either to inject using the template engine or in code when writing your actions.
+
+There is a more detailed example in the examples folder:
+
+**Example** example/workflow-custom-data
+
+<details>
+<summary>Examples</summary>
+
+```yaml
+...
+jobs:
+  - key: custom-example
+    actions:
+      - action: "print; **From the custom action**"
+      - action:  custom
+      - action: "print; **From the template**"
+      - action: "print; {{(get_data `items`).GetArrayCount }}"
+      - action: "for;i;0;{{minus (get_data `items`).GetArrayCount 1 }}"
+      - action: "print;-{{(index .Manifest.Data.items (get_stk_val `i`)).msg}}"
+      - action: "next"
+data:
+  items:
+    - msg: "item 1"
+    - msg: "item 2"
+    - msg: "item 3"
+    - msg: "item 4"
+    - msg: "item 5"
+  data_test: "y"
+```
+
+```go
+val := m.Manifest.DataModel().GetMapItem("data_test").ToBool()
+	fmt.Println(val)
+	//*******************
+	//Get the custom data
+	//*******************
+	item := m.Manifest.DataModel().GetMapItem("items").GetArray()
+
+```
 
 </details>
 
 ---
 
+## Custom data code reference
+
+<details>
+<summary>reference</summary>
+
+```go
+
+// The main entry point to the data
+w.DataModel() *Data
+
+// GetArrayItem returns an item from the array
+// - index: the index of the item to get
+GetArrayItem(index int) *Data
+
+// GetArrayCount returns the number of items in the array
+GetArrayCount() int
+
+// GetArray returns an array of Data objects
+GetArray() []Data
+
+// GetMap returns a map of Data objects
+GetMap() map[string]Data
+
+// GetMapItem a Data object
+// - Key: the key to get
+GetMapItem(key string) *Data
+
+// GetInterface returns the data as an interface{}
+GetInterface() interface{}
+
+// GetType returns the type of the data as a string
+GetType() string
+
+// ToString returns the data as a string
+ToString() string
+
+// ToBool returns the data as a bool
+ToBool() bool 
+
+// ToFloat32 returns the data as a float32
+ToFloat32() float32
+
+// ToFloat64 returns the data as a float64
+ToFloat64() float64
+
+// ToInt returns the data as an int
+ToInt() int 
+
+// ToInt8 returns the data as an int8
+ToInt8() int8
+
+// ToInt32 returns the data as an int32
+ToInt32() int32
+
+// ToInt64 returns the data as an int64
+ToInt64() int64
+
+
+```
+</details>
+
+---
 ## inbuilt actions
 go-workflow comes with some basic actions mainly around handling the flow. each parameter is separated with **;**. You can also use end or goto in the Fail field of the action
 
@@ -264,6 +372,9 @@ go-workflow comes with some basic actions mainly around handling the flow. each 
 | wait-minutes    |[int] |wait for x minutes |
 | for    |[variable];[start_value];[end_value]|for loop |
 | next   |N/A|used withe the for loop to denote the end of the loop |
+| error   |[message]]|causes the job to fail |
+
+---
 
 <details>
 <summary>Examples</summary>
@@ -310,6 +421,12 @@ To help get you started go-workflow has some Actions that if you choose can be a
 | Action_Delete    |actions\file|Deletes a file |
 | Action_RunJS    |actions\js|Run java script |
 | Action_Store    |actions\store|Gives the ability to store values is the bucket store |
+| Action_Store    |actions\store|Gives the ability to store values is the bucket store |
+| Action_Condition    |actions\condition|Gives the ability to evaluate a condition and jump to a task |
+| Action_SubWorkflow    |actions\sub_workflow|Gives the ability to run sub-workflow jobs |
+| Action_Parallel    |actions\parallel_workflow|Allows you to run multiple actions in parallel |
+
+## Actions Examples and Parameters
 
 <details>
 <summary>1. CallApi Action</summary>
@@ -329,7 +446,6 @@ This action enables you to make Rest API Calls
 | result_action    |none,print,js   |what to do with the returned results |
 | result_format    |none,json,yaml,toml,xml,plain   |how to format the result|
 | result_js    |   |js to process the result can be a file or inline |
-
 
 ### POST Example
 ```yaml
@@ -490,6 +606,126 @@ This action stores values in the data bucket
 ```
 
 </details>
+
+<details>
+<summary>7. Condition Action</summary>
+
+This action check for a condition and runs a task based on pass or fail
+
+**Example:**  examples/workflow-store-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| condition    |   |The condition that need to be evaluate must resolve to a bool|
+| pass    |end [action key]   |the action to run or end |
+| fail    |end [action key]   |the action to run or end |
+
+```yaml
+ - action: condition
+    config:
+      condition: "{{ get_param `times_to_loop`}} > 1 && {{ get_param `times_to_loop`}} < 5"
+      pass: A
+      fail: B
+```
+
+</details>
+
+
+<details>
+<summary>8. Sub-Workflow Action</summary>
+
+This action runs a sub-workflow job the job it runs must have the 
+- is_sub_workflow: true
+- and inputs defines 
+
+```YAML
+is_sub_workflow: true
+    inputs:
+      value1:
+      value2: test
+      value3: test
+```
+
+**Example:**  examples/workflow-store-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| job    |   |The sub job to run|
+| inputs    |   |key value pair |
+
+
+```yaml
+jobs:
+ - key: main-workflow-example
+    title: Main Workflow
+    description: This is the main workflow
+    actions:
+      - action: "sub-workflow"
+        config:
+          job: sub-workflow-example
+          inputs:
+            value1: "This is the second value"
+  - key: sub-workflow-example
+    title: Sub Workflow
+    description: This is the Sub workflow
+    is_sub_workflow: true
+    inputs:
+      value1:
+    actions:
+      - action: "print {{get_input `value1`}}"
+ 
+```
+
+</details>
+
+<details>
+<summary>9. Parallel Action</summary>
+
+This action allows you to run multiple actions in parallel
+
+```YAML
+- key: parallel-example
+    actions:
+      - action: "parallel"
+        config:
+          actions:
+            - action: "wait-seconds;2"
+            - action: "wait-seconds;10"
+            - action: print;Hello World"
+      - action: "This is run after the parallel action"
+```
+
+**Example:**  examples/workflow-store-action
+
+|   field     |  Options | Description|
+|-----------------|-------|-------|
+| actions    |   |List of actions|
+| - action:    |   |the action and config the same as it would be under the job:  actions: |
+
+
+```yaml
+jobs:
+ - key: main-workflow-example
+    title: Main Workflow
+    description: This is the main workflow
+    actions:
+      - action: "sub-workflow"
+        config:
+          job: sub-workflow-example
+          inputs:
+            value1: "This is the second value"
+  - key: sub-workflow-example
+    title: Sub Workflow
+    description: This is the Sub workflow
+    is_sub_workflow: true
+    inputs:
+      value1:
+    actions:
+      - action: "print {{get_input `value1`}}"
+ 
+```
+
+</details>
 ---
 
 ## How to use go-workflow
@@ -612,7 +848,7 @@ you can locate the example under: examples/add-custom-actions-example
 ### main.go
 
 In this example we have created a custom action called **MultiPrint** and we added it to the workflow engine
-- The function must use the following definition **func [FunctionName](w *workflow.Workflow) error**
+- The function must use the following definition **func [FunctionName](w *workflow.Workflow, m *workflow.TemplateData) error**
 - To add the function to the workflow engine use **wf.ActionList["FunctionName"] = FunctionName**
 - To get values from the config use one of the following based on the data type you with to receive 
     - w.GetConfigTokenString
@@ -620,7 +856,7 @@ In this example we have created a custom action called **MultiPrint** and we add
     - w.GetConfigTokenBool
     - w.GetConfigTokenMap  
     - w.GetConfigTokenInterface  
-- You can make the w.GetConfigToken optional by setting the 3rd parameter to false w.GetConfigTokenString("string_value", w.Model, false)
+- You can make the w.GetConfigToken optional by setting the 3rd parameter to false w.GetConfigTokenString("string_value", m, false)
 - w.GetConfigTokenString([name of the config key]], [model to pass], [required])
 
 
@@ -672,32 +908,32 @@ func main() {
 //**************************
 //print will print a message
 //**************************
-func MultiPrint(w *workflow.Workflow) error {
+func MultiPrint(w *workflow.Workflow, m *workflow.TemplateData) error {
 	//**********************************
 	//Get a string value from the config
 	//**********************************
-	string_value, err := w.GetConfigTokenString("string_value", w.Model, true)
+	string_value, err := w.GetConfigTokenString("string_value", m, true)
 	if err != nil {
 		return err
 	}
 	//*******************************
 	//Get a int value from the config
 	//*******************************
-	int_value, err := w.GetConfigTokenInt("int_value", w.Model, true)
+	int_value, err := w.GetConfigTokenInt("int_value", m, true)
 	if err != nil {
 		return err
 	}
 	//********************************
 	//Get a bool value from the config
 	//********************************
-	bool_value, err := w.GetConfigTokenBool("bool_value", w.Model, true)
+	bool_value, err := w.GetConfigTokenBool("bool_value", m, true)
 	if err != nil {
 		return err
 	}
 	//*******************************
 	//Get a map value from the config
 	//*******************************
-	map_value, err := w.GetConfigTokenMap("map_value", w.Model, true)
+	map_value, err := w.GetConfigTokenMap("map_value", m, true)
 	if err != nil {
 		return err
 	}
@@ -841,11 +1077,11 @@ func main() {
 //**************************
 //print will print a message
 //**************************
-func MultiPrint(w *workflow.Workflow) error {
+func MultiPrint(w *workflow.Workflow, m *workflow.TemplateData) error {
 	//*******************************
 	//Get a map value from the config
 	//*******************************
-	map_value, err := w.GetConfigTokenMap("map_value", w.Model, true)
+	map_value, err := w.GetConfigTokenMap("map_value", m, true)
 	if err != nil {
 		return err
 	}
@@ -946,7 +1182,7 @@ you can locate the example under: examples/adding-start-and-cleanup-handlers
 
 ### main.go
 
-In this example we use the **wf.InitFunc** and **wf.CleanFunc** to handle startup and cleanup states. You function must follow the function patter **func FunctionName(w *workflow.Workflow) error**
+In this example we use the **wf.InitFunc** and **wf.CleanFunc** to handle startup and cleanup states. You function must follow the function patter **func FunctionName(w *workflow.Workflow, m *workflow.TemplateData) error**
 
 - **InitFunc** is run at the start of a work flow job and **CleanFunc** is run at the end
 - you can use InitFunc to read a config file and store the values so that the workflow can use them
@@ -1002,7 +1238,7 @@ func AddHttp(val string) string {
 	return fmt.Sprintf("http://%s", val)
 }
 
-func Startup(w *workflow.Workflow) error {
+func Startup(w *workflow.Workflow, m *workflow.TemplateData) error {
 	//****************************************************
 	//Save some values to the data bucket
 	//You could read values from a config file or database
@@ -1027,7 +1263,7 @@ func Startup(w *workflow.Workflow) error {
 	return nil
 }
 
-func Clean(w *workflow.Workflow) error {
+func Clean(w *workflow.Workflow, m *workflow.TemplateData) error {
 	fmt.Println("Cleaning up")
 	return nil
 }
@@ -1276,16 +1512,153 @@ Cleaning up
 
 </details>
 
+<details>
+<summary>6. condition-example</summary>
+
+This example shows how we can check for conditions and then jump to a action. if you set the times_to_loop between 1 and 5 it will use the pass condition
+else it will fail. This also shows how you can manipulate the next task to be run using a Custom action.
+
+you can locate the example under: examples/condition-example
+
+### main.go
+
+```go
+package main
+
+import (
+	"github.com/Mrpye/go-workflow/actions/condition"
+	"github.com/Mrpye/go-workflow/workflow"
+)
+
+func main() {
+	//*****************
+	//create a workflow
+	//*****************
+	wf := workflow.CreateWorkflow()
+
+	//**********************************
+	//Only show errors and print actions
+	//**********************************
+	wf.Verbose = workflow.LOG_INFO
+	wf.ActionList["condition"] = condition.Action_Condition
+
+	//*************************
+	//load the workflow manifest
+	//*************************
+	err := wf.LoadManifest("./workflow.yaml")
+	if err != nil {
+		println(err.Error())
+	}
+
+	//********************
+	//Run the workflow job
+	//********************
+	err = wf.RunJob("condition-example")
+	if err != nil {
+		println(err.Error())
+	}
+}
+
+```
+
+### workflow.yaml
+
+
+```yaml
+meta_data:
+    name: condition-example
+    description: This is a example we use an action to evaluate a condition then use the result to decide what to do next
+    version: 1.0.0
+    author: Andrew Pye
+    contact: 
+    create_date: "2022-11-13 11:39:44"
+    update_date: "2022-11-13 11:39:44"
+jobs:
+    - key: condition-example
+      title:  Simple example
+      description:  This job how to use loops and variables
+      actions:
+        - action: condition
+          config:
+            condition: "{{ get_param `times_to_loop`}} > 1 && {{ get_param `times_to_loop`}} < 5"
+            pass: A
+            fail: B
+        - action: end
+        - action: "print; This is A"
+          key: A
+        - action: end
+        - action: "print; This is B"
+          key: B
+        
+parameters: 
+    - key: times_to_loop
+      value: 1
+
+```
+## Result
+
+```bash
+2023/02/23 10:16:04 *************************
+2023/02/23 10:16:04 ** Action: ->condition **
+2023/02/23 10:16:04 *************************
+2023/02/23 10:16:04 condition failed going to action B: Fail
+2023/02/23 10:16:04 ---------------------------------------
+2023/02/23 10:16:04 ** Action Completed: ->condition: OK **
+2023/02/23 10:16:04 ---------------------------------------
+
+
+2023/02/23 10:16:04 *********************************
+2023/02/23 10:16:04 ** Action: B->print; This is B **
+2023/02/23 10:16:04 *********************************
+ This is B
+2023/02/23 10:16:04 -----------------------------------------------
+2023/02/23 10:16:04 ** Action Completed: B->print; This is B: OK **
+2023/02/23 10:16:04 -----------------------------------------------
+```
+
+</details>
+
+<details>
+<summary>7. Custom data and Call Custom Action from withing a Custom Action</summary>
+
+This action allows you to run multiple actions in parallel
+
+**Example:**  examples/workflow-custom-data
+
+</details>
+
+---
+## Change Log
+### v0.1.0
+  First build 
+
+### v0.2.0
+  - Added lots of examples
+  - updated the readme-
+  - Added some actions that can be used
+    - API Call
+    - Copy File
+    - Rename File
+    - Delete File
+    - Store data
+    - Run JS
+
+### v0.3.0
+  - Added Condition Action
+  - Added Sub Workflow Action
+  - Added ability for actions to change the next action to run
+  - Added Sub-Workflow option and inputs to job
+  - Added a CreateSubWorkflow function so actions can run a workflow inside the workflow
+  - Added Parallel Action so you can run multiple actions at the same time
+  - Added Custom Data to the manifest and added the ability to add via code to template engine
+  - Added More examples
 
 ---
 
 ## To Do
 - Unit Test for actions
 - Documentation the package
-- Add some common actions into the library such as 
-	- Condition Action 
-	- Call Job Function
-- Add the ability to turn a job into a subprocess and use the Call Job Function to start it
+
 
 --- 
 

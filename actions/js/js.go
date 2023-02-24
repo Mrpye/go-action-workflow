@@ -7,9 +7,9 @@ import (
 	"github.com/Mrpye/golib/lib"
 )
 
-func Action_RunJS(w *workflow.Workflow) error {
+func Action_RunJS(w *workflow.Workflow, m *workflow.TemplateData) error {
 
-	code, err := w.GetConfigTokenString("js", w.Model, false)
+	code, err := w.GetConfigTokenString("js", m, false)
 	if err != nil {
 		return err
 	}
@@ -18,7 +18,7 @@ func Action_RunJS(w *workflow.Workflow) error {
 		//*********************
 		//Get the config values
 		//*********************
-		js_file, err := w.GetConfigTokenString("js_file", w.Model, true)
+		js_file, err := w.GetConfigTokenString("js_file", m, true)
 		if err != nil {
 			return err
 		}
@@ -41,7 +41,7 @@ func Action_RunJS(w *workflow.Workflow) error {
 	//Run our code
 	//************
 	vm := w.CreateJSEngine()
-	vm.Set("model", w.Model)
+	vm.Set("model", m)
 	_, err = vm.RunString(code)
 	if err != nil {
 		return err

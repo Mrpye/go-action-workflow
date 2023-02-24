@@ -16,17 +16,17 @@ import (
 )
 
 //Function to Process results from an action
-func (m *Workflow) ActionProcessResults(data interface{}) error {
+func (w *Workflow) ActionProcessResults(m *TemplateData, data interface{}) error {
 	//***********************
 	//Get how to store result
 	//***********************
 
-	result_action, err := m.GetConfigTokenString("result_action", m.Model, false)
+	result_action, err := w.GetConfigTokenString("result_action", m, false)
 	if err != nil {
 		return err
 	}
 
-	result_format, err := m.GetConfigTokenString("result_format", m.Model, false)
+	result_format, err := w.GetConfigTokenString("result_format", m, false)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func (m *Workflow) ActionProcessResults(data interface{}) error {
 	//*************************
 	//Create the gout formatter
 	//*************************
-	w, err := gout.New()
+	g, err := gout.New()
 	if err != nil {
 		panic(err)
 	}
@@ -51,22 +51,22 @@ func (m *Workflow) ActionProcessResults(data interface{}) error {
 	if result_format != "" && result_format != "none" {
 		switch strings.ToLower(result_format) {
 		case "json":
-			w.SetFormatter(json.Formatter{})
+			g.SetFormatter(json.Formatter{})
 		case "yaml":
-			w.SetFormatter(yaml.Formatter{})
+			g.SetFormatter(yaml.Formatter{})
 		case "toml":
-			w.SetFormatter(toml.Formatter{})
+			g.SetFormatter(toml.Formatter{})
 		case "xml":
-			w.SetFormatter(xml.Formatter{})
+			g.SetFormatter(xml.Formatter{})
 		case "plain":
-			w.SetFormatter(plain.Formatter{})
+			g.SetFormatter(plain.Formatter{})
 		default:
-			w.SetFormatter(json.Formatter{})
+			g.SetFormatter(json.Formatter{})
 		}
 
 		b := new(strings.Builder)
-		w.SetWriter(b)
-		err = w.Print(data)
+		g.SetWriter(b)
+		err = g.Print(data)
 		if err != nil {
 			return err
 		}
@@ -88,7 +88,7 @@ func (m *Workflow) ActionProcessResults(data interface{}) error {
 		//**************
 		//run js results
 		//**************
-		result_js, err := m.GetConfigTokenString("result_js", m.Model, true)
+		result_js, err := w.GetConfigTokenString("result_js", m, true)
 		if err != nil {
 			return err
 		}
@@ -111,7 +111,7 @@ func (m *Workflow) ActionProcessResults(data interface{}) error {
 		//**********
 		//Run the js
 		//**********
-		vm := m.CreateJSEngine()
+		vm := w.CreateJSEngine()
 		_, err = vm.RunString(js_code)
 		if err != nil {
 			return err
@@ -120,7 +120,7 @@ func (m *Workflow) ActionProcessResults(data interface{}) error {
 		if !ok {
 			return errors.New("no function found 'ActionResults'(model,result)")
 		}
-		res, err := action_results(goja.Undefined(), vm.ToValue(m.Model), vm.ToValue(data))
+		res, err := action_results(goja.Undefined(), vm.ToValue(m), vm.ToValue(data))
 
 		if err != nil {
 			return err

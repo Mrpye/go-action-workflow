@@ -1,9 +1,10 @@
 package workflow
 
 type Manifest struct {
-	Meta       MetaData    `json:"meta_data" yaml:"meta_data"`
-	Jobs       []Job       `json:"jobs" yaml:"jobs"`
-	Parameters []Parameter `json:"parameters" yaml:"parameters"`
+	Meta       MetaData               `json:"meta_data" yaml:"meta_data"`
+	Jobs       []Job                  `json:"jobs" yaml:"jobs"`
+	Parameters []Parameter            `json:"parameters" yaml:"parameters"`
+	Data       map[string]interface{} `json:"data" yaml:"data"`
 }
 
 type ManifestOption func(*Manifest)

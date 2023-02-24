@@ -1,6 +1,9 @@
 package workflow
 
-import "text/template"
+import (
+	"errors"
+	"text/template"
+)
 
 // Log Level constants
 const (
@@ -9,29 +12,32 @@ const (
 	LOG_VERBOSE = 2
 )
 
+var (
+	ErrEndWorkflow = errors.New("end workflow")
+)
+
 //Workflow is the main struct for the workflow
 type Workflow struct {
 	Verbose         int
 	Manifest        Manifest
-	InitFunc        ActionFunc
-	CleanFunc       ActionFunc
+	InitFunc        EventFunc
+	CleanFunc       EventFunc
 	templateFuncMap template.FuncMap
 	stack           loopStack
-	Model           *TemplateData
+	model           *TemplateData
 	ActionList      map[string]ActionFunc
 	dataBucket      map[string]map[string]interface{}
+	current_index   int
+	current_job     *Job
 }
 
 //ActionFunc is the function that is called for each action
-type ActionFunc func(*Workflow) error
+type ActionFunc func(*Workflow, *TemplateData) error
+
+type EventFunc func(*Workflow) error
 
 //WorkflowOption is a function that sets a workflow option
 type WorkflowOption func(*Workflow)
-
-// SetTemplateFuncMap sets the template function map
-func (m *Workflow) SetTemplateFuncMap(f template.FuncMap) {
-	m.templateFuncMap = f
-}
 
 // OptionWorkflowVerbose sets the verbose option
 func OptionWorkflowVerbose(v int) WorkflowOption {
