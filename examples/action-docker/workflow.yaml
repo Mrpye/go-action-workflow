@@ -1,0 +1,43 @@
+meta_data:
+  name: docker-reg-example
+  description: This is an example of how to use the store action
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: example
+    actions:
+      - action: docker_reg_download
+        disabled: false
+        config:
+          folder: "docker_images"
+          images: "$data.images"
+      - action: docker_reg_upload
+        disabled: true
+        config:
+          folder: "docker_images"
+          images:
+            - "postgresql:12.11.0-debian-11-r13.tar"
+
+      - action: docker_reg_upload
+        disabled: true
+        config:
+          folder: "docker_images"
+          import_all: true
+         
+      - action: file_delete
+        config:
+          source_file: "./docs"
+      - action: file_delete
+        disabled: true
+        config:
+          source_file: "./docker_images"
+      
+data:              
+  images:
+    postgresql: "metsitech/postgresql:12.11.0-debian-11-r13"       
+      
+
+  

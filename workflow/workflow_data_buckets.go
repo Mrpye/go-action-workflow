@@ -1,9 +1,11 @@
 package workflow
 
+import "github.com/Mrpye/golib/convert"
+
 // dataBucket is a map of maps that can be used to store data between actions
-// The first key is the name of the bucket
-// The second key is the name of the value
-// The value is the data
+// - key is the name of the bucket
+// - name is the name of the value
+// - value is the data to store
 func (m *Workflow) SetValueToDataBucket(key string, name string, value interface{}) {
 	if m.dataBucket == nil {
 		m.dataBucket = make(map[string]map[string]interface{})
@@ -15,8 +17,8 @@ func (m *Workflow) SetValueToDataBucket(key string, name string, value interface
 }
 
 // GetValueFromDataBucket returns the value from the data bucket
-// The first key is the name of the bucket
-// The second key is the name of the value
+// - key is the name of the bucket
+// - name is the name of the value
 // The value is the data or nil if the value does not exist
 func (m *Workflow) GetValueFromDataBucket(key string, name string) interface{} {
 	if m.dataBucket == nil {
@@ -32,8 +34,8 @@ func (m *Workflow) GetValueFromDataBucket(key string, name string) interface{} {
 }
 
 // GetValueFromDataBucketAsStrings returns the value from the data bucket as a string
-// The first key is the name of the bucket
-// The second key is the name of the value
+// - key is the name of the bucket
+// - name is the name of the value
 // The value is the data or nil if the value does not exist
 func (m *Workflow) GetValueFromDataBucketAsStrings(key string, name string) string {
 	if m.dataBucket == nil {
@@ -43,14 +45,14 @@ func (m *Workflow) GetValueFromDataBucketAsStrings(key string, name string) stri
 		m.dataBucket[key] = make(map[string]interface{})
 	}
 	if val, ok := m.dataBucket[key][name]; ok {
-		return val.(string)
+		return convert.ToString(val)
 	}
 	return ""
 }
 
 // GetValueFromDataBucketAsInt returns the value from the data bucket as an int
-// The first key is the name of the bucket
-// The second key is the name of the value
+// - key is the name of the bucket
+// - name is the name of the value
 // The value is the data or nil if the value does not exist
 func (m *Workflow) GetValueFromDataBucketAsInt(key string, name string) int {
 	if m.dataBucket == nil {
@@ -60,14 +62,14 @@ func (m *Workflow) GetValueFromDataBucketAsInt(key string, name string) int {
 		m.dataBucket[key] = make(map[string]interface{})
 	}
 	if val, ok := m.dataBucket[key][name]; ok {
-		return val.(int)
+		return convert.ToInt(val)
 	}
 	return 0
 }
 
 // GetValueFromDataBucketAsFloat returns the value from the data bucket as a float
-// The first key is the name of the bucket
-// The second key is the name of the value
+// - key is the name of the bucket
+// - name is the name of the value
 // The value is the data or nil if the value does not exist
 func (m *Workflow) GetValueFromDataBucketAsFloat(key string, name string) float64 {
 	if m.dataBucket == nil {
@@ -77,14 +79,14 @@ func (m *Workflow) GetValueFromDataBucketAsFloat(key string, name string) float6
 		m.dataBucket[key] = make(map[string]interface{})
 	}
 	if val, ok := m.dataBucket[key][name]; ok {
-		return val.(float64)
+		return convert.ToFloat64(val)
 	}
 	return 0
 }
 
 // GetValueFromDataBucketAsBool returns the value from the data bucket as a bool
-// The first key is the name of the bucket
-// The second key is the name of the value
+// - key is the name of the bucket
+// - name is the name of the value
 // The value is the data or nil if the value does not exist
 func (m *Workflow) GetValueFromDataBucketAsBool(key string, name string) bool {
 	if m.dataBucket == nil {
@@ -94,7 +96,7 @@ func (m *Workflow) GetValueFromDataBucketAsBool(key string, name string) bool {
 		m.dataBucket[key] = make(map[string]interface{})
 	}
 	if val, ok := m.dataBucket[key][name]; ok {
-		return val.(bool)
+		return convert.ToBool(val)
 	}
 	return false
 }
@@ -105,7 +107,7 @@ func (m *Workflow) GetDataBucket() map[string]map[string]interface{} {
 }
 
 //GetDataBucketItem returns the Map from the data bucket
-// The first key is the name of the bucket
+// - key is the name of the bucket
 // returns Bucket Content nil if the bucket does not exist
 func (m *Workflow) GetDataBucketContent(key string) map[string]interface{} {
 	if m.dataBucket == nil {
@@ -126,7 +128,7 @@ func (m *Workflow) ClearDataBuckets() {
 }
 
 // ClearDataBucket values from the data bucket
-// The first key is the name of the bucket
+// - key is the name of the bucket
 func (m *Workflow) ClearDataBucket(key string) {
 	m.dataBucket[key] = make(map[string]interface{})
 }

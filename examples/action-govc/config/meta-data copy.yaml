@@ -1,0 +1,14 @@
+instance-id: "Rancher-AP2-control"
+local-hostname: "Rancher-AP2-control"
+network:
+  version: 2
+  ethernets:
+    ens192:
+      addresses: [10.22.60.114/24]
+      gateway4: 10.22.60.1
+      dhcp6: false
+      nameservers:
+        addresses:
+          - 8.8.8.8
+      dhcp4: false
+      optional: true

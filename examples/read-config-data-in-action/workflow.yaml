@@ -1,0 +1,16 @@
+meta_data:
+  name: read-config-example
+  description: This example shows how to read config data from a file and pass it to an action
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: read-config-example
+    actions:
+      - action: config
+      - action: "print;{{get_config `viper` `targets.git.user` `string` `test 1` `test 2` `test 3`}}"
+      
+parameters:
+  

@@ -1,0 +1,49 @@
+meta_data:
+  name: k8-example
+  description: This example shows how to read config data from a file and pass it to an action
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: k8-example
+    actions:
+      - action: k8_wait
+        config:
+          retry: 1
+          checks:
+            - "deployment:helm-api-install(.*)"
+          
+      - action: k8_pod_exec
+        config:
+          namespace: "vault"
+          pod_name: "vault-0"
+          command: "ls"
+          result_action: js
+          #result_format: json
+          result_js: |
+            function ActionResults(store, result) {
+              console("value: "+result)
+              return true;
+            }
+
+      - action: k8_get_service_ip
+        config:
+          namespace: "default"
+          name: "dp-jenkins-qa(.*)"
+          result_action: js
+          #result_format: json
+          result_js: |
+            function ActionResults(store, result) {
+              for (var key in result) {
+                console("ServiceName: "+result[key].ServiceName)
+                console("ServiceType: "+result[key].ServiceType)
+                console("IP: "+result[key].IP)
+                console("Port: "+result[key].Port)
+              }
+              return true;
+            }
+
+            
+parameters:

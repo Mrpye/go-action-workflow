@@ -1,0 +1,11 @@
+package_update: false
+packages:
+  - nfs-kernel-server
+
+runcmd:
+  - sudo mkdir -p /mnt/nfs_share
+  - sudo chown -R nobody:nogroup /mnt/nfs_share/
+  - sudo chmod -R 777 /mnt/nfs_share/
+  - sudo echo "/mnt/nfs_share {{get_param `ip`}}/24(rw,sync,no_subtree_check)" >> /etc/exports
+  - sudo exportfs -a
+  - sudo systemctl restart nfs-kernel-server

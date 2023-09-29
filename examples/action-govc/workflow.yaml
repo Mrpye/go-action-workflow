@@ -1,0 +1,58 @@
+meta_data:
+  name: govc
+  description: This is an example of how to use the govc action
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: example
+    actions:
+      - action: govc
+        disabled: false
+        config:
+          command: |
+            ls /Ashburn/vm
+      - action: govc
+        disabled: true
+        config:
+          command: |
+            vm.clone -vm {{get_param `vm_template`}}
+            -folder={{get_param `folder`}}
+            -net={{get_param `network`}}
+            -on=false
+            -waitip=false
+            {{get_param `vm_name`}} 
+
+      - action: "print;{{base64enc (templ (read_file `config/userdata.yaml`))}}"
+
+      - action: govc
+        disabled: true
+        config:
+          command: |
+            vm.change -vm "{{get_param `vm_name`}}"
+            -e guestinfo.metadata="{{base64enc (templ (read_file `config/meta-data.yaml`))}}"
+            -e guestinfo.metadata.encoding="base64"
+            -e guestinfo.userdata="{{base64enc (templ (read_file `config/userdata.yaml`))}}"
+            -e guestinfo.userdata.encoding="base64"
+
+      - action: govc
+        disabled: true
+        config:
+          command: |
+            vm.power -on {{get_param `vm_name`}}
+
+parameters:
+  - key: "vm_template"
+    value: "/Datacenter/vm/10.22.60.0_AP/Templates/Ubuntu-New"
+  - key: "folder"
+    value: "/Datacenter/vm/10.22.60.0_AP"
+  - key: "ip"
+    value: "10.22.60.100"
+  - key: "gateway"
+    value: "10.22.60.1" 
+  - key: "network"
+    value: EPG60
+  - key: "vm_name"
+    value: NFS

@@ -3,102 +3,52 @@ package workflow
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"path"
+	"strings"
 	"text/template"
 
-	go_data_chain "github.com/Mrpye/go-data-chain"
-	"github.com/Mrpye/golib/lib"
-	"gopkg.in/yaml.v3"
+	"github.com/Mrpye/golib/log"
 )
 
-// SetTemplateFuncMap sets the template function map
+// CreateSubWorkflowEngine creates a new workflow engine from the current workflow engine
+// This is useful for creating sub workflows
 func (m *Workflow) CreateSubWorkflowEngine() *Workflow {
 	wf := CreateWorkflow()
 	wf.Manifest = m.Manifest
 	wf.ActionList = m.ActionList
 	wf.dataBucket = m.dataBucket
-	wf.Verbose = m.Verbose
-	wf.templateFuncMap = wf.GetTemplateFuncMap()
+	wf.LogLevel = m.LogLevel
+	wf.templateFuncMap = wf.GetInbuiltTemplateFuncMap()
 	wf.InitFunc = m.InitFunc
 	return wf
 }
 
-// SetTemplateFuncMap sets the template function map
+// SetBasePath will set the base path of the manifest file
+// base_path - the base path of the manifest file
+func (m *Workflow) SetBasePath(base_path string) {
+	m.base_path = base_path
+}
+
+// BuildPath will build a path from the base path and the file path
+// file_path - the file path to build
+// returns the full path
+func (m *Workflow) BuildPath(file_path string) string {
+	return path.Join(m.base_path, file_path)
+}
+
+func (m *Workflow) CountArray(v []interface{}) int {
+	return len(v)
+}
+
+// GetCurrentJob returns the current job
 func (m *Workflow) GetCurrentJob() *Job {
 	return m.current_job
 }
 
-//LoadManifest loads the manifest from a string
-//package_path: the path to the manifest file
-func (m *Workflow) LoadManifestFromString(manifest_string string) error {
-	manifest := CreateManifest()
-	err := yaml.Unmarshal([]byte(manifest_string), &manifest)
-	if err != nil {
-		return err
-	}
-	m.Manifest = *manifest
-
-	return nil
-}
-
-func (m *Workflow) GetDataItem(item string) *go_data_chain.Data {
-	if m.Manifest.Data != nil {
-		data := m.Manifest.DataModel().GetMapItem("data")
-		if data != nil {
-			return data.GetMapItem(item)
-		}
-
-	}
-	return nil
-}
-
-//LoadManifest loads the manifest
-//package_path: the path to the manifest file
-func (m *Workflow) LoadManifest(package_path string) error {
-	//****************
-	//Load the package
-	//****************
-	file, _ := ioutil.ReadFile(package_path)
-	return m.LoadManifestFromString(string(file))
-}
-
-//SaveManifest saves the manifest
-//file_name: the name of the file to save
-func (m *Workflow) SaveManifest(file_name string) error {
-	file, _ := yaml.Marshal(m.Manifest)
-	//file_name := fmt.Sprintf("answer_%s_%s.yaml", m.Package.Meta.PackageName, m.currentAppProfile)
-	err := ioutil.WriteFile(file_name, file, 0644)
-	return err
-}
-
-// GetParamValue will return the value of the parameter with the given key
-// key - the key of the parameter to return
-func (m *Workflow) GetParamValue(key string) interface{} {
-	//*************
-	//Get the param
-	//*************
-	p := m.Manifest.GetParameter(key)
-
-	if p == nil {
-		return nil
-	}
-	//*******************
-	//Get the value as is
-	//*******************
-	value := p.GetValue()
-	switch data_val := value.(type) {
-	case string:
-		parsed_str, _ := m.ParseToken(m.model, string(data_val))
-		return parsed_str
-	default:
-		return data_val
-	}
-}
-
-// GetInputValue will return the value of the job input
-// key - the key of the parameter to return
-func (m *Workflow) MapValuesToInput(key map[string]interface{}) error {
-	for k, v := range key {
+// MapValuesToInput will map the values in the map to the input of the current job
+// map_data - the map of values to map to the input
+func (m *Workflow) MapValuesToInput(map_data map[string]interface{}) error {
+	for k, v := range map_data {
 		err := m.current_job.SetInputAnswer(k, v)
 		if err != nil {
 			return err
@@ -109,6 +59,7 @@ func (m *Workflow) MapValuesToInput(key map[string]interface{}) error {
 
 // GetInputValue will return the value of the job input
 // key - the key of the parameter to return
+// returns the value of the parameter or nil if the parameter does not exist
 func (m *Workflow) GetInputValue(key string) interface{} {
 	//*************
 	//Get the param
@@ -125,8 +76,8 @@ func (m *Workflow) GetInputValue(key string) interface{} {
 	switch data_val := value.(type) {
 	case string:
 		parsed_str, _ := m.ParseToken(m.model, string(data_val))
-		if m.Verbose == LOG_VERBOSE {
-			lib.LogVerbose(fmt.Sprintf("GetTokenString Value(%v) Result(%v)\n", data_val, parsed_str))
+		if m.LogLevel == LOG_VERBOSE {
+			log.LogVerbose(fmt.Sprintf("ParseToken Value(%v) Result(%v)\n", data_val, parsed_str))
 		}
 		return parsed_str
 	default:
@@ -136,13 +87,24 @@ func (m *Workflow) GetInputValue(key string) interface{} {
 
 // SetCurrentActionIndex will set the current action index
 // index - the index to set
+// returns an error if the index is out of range or if the index is greater than the next action
 func (m *Workflow) SetCurrentActionIndex(index int) error {
+	//***********************************
+	// Check if the index is out of range
+	//***********************************
 	if index < 0 || index >= len(m.current_job.Actions) {
 		return errors.New("index out of range")
 	}
 
+	//******************************
+	// Take a peek at the loop stack
+	//******************************
 	loop, _ := m.stack.Peek()
 
+	// *************************************************
+	//check if the index is greater than the next action
+	//if it is then we need to throw an error
+	// *************************************************
 	if loop != nil {
 		temp_index := -1
 		for i := loop.Index; i < len(m.current_job.Actions); i++ {
@@ -154,6 +116,9 @@ func (m *Workflow) SetCurrentActionIndex(index int) error {
 			return errors.New("cannot set index to a value greater than the next action")
 		}
 	}
+	//**********************
+	// Set the current index
+	//**********************
 	m.current_index = index
 	return nil
 }
@@ -167,4 +132,173 @@ func (m *Workflow) GetCurrentActionIndex() int {
 // SetTemplateFuncMap sets the template function map
 func (m *Workflow) SetTemplateFuncMap(f template.FuncMap) {
 	m.templateFuncMap = f
+}
+
+func (m *Workflow) GetTemplateFuncMap() template.FuncMap {
+	return m.templateFuncMap
+}
+
+// splitActionParams will split the action into parts
+// - action  - the action to split
+// - returns - the action parts
+// - returns - error
+func (m *Workflow) splitActionParams(action string, process_condition_only bool) ([]string, error) {
+
+	//****************************
+	//See if to process the tokens
+	//****************************
+	action_parts := strings.Split(fmt.Sprintf("%v", action), ";")
+	parse_tokens := false
+	switch strings.ToLower(action_parts[0]) {
+	case "for", "next":
+		parse_tokens = true
+	default:
+		if !process_condition_only {
+			parse_tokens = true
+		}
+	}
+
+	//********************************
+	//Parse any variable in the action
+	//********************************
+	lowercase_action := ""
+	if parse_tokens {
+		parsed_action, err := m.ParseToken(m.model, action)
+		if err != nil {
+			return nil, err
+		}
+		lowercase_action = parsed_action
+	}
+	//***************************
+	//Split the action into parts
+	//***************************
+	action_parts = strings.Split(fmt.Sprintf("%v", lowercase_action), ";")
+	action_parts[0] = strings.ToLower(action_parts[0])
+
+	return action_parts, nil
+}
+
+// Get Runtime vars from the workflow using key
+// key - the key of the parameter to return
+// returns the value of the parameter or nil if the parameter does not exist
+func (m *Workflow) GetRuntimeVar(key string) (interface{}, error) {
+
+	//***************
+	//check the vars
+	//***************
+	if m.runtime_vars == nil {
+		return nil, fmt.Errorf("runtime_vars is nil")
+	}
+
+	//********************
+	//check the key exists
+	//********************
+	if m.runtime_vars[key] == nil {
+		return nil, fmt.Errorf("key %v does not exist", key)
+	}
+
+	//*******************
+	//Get the value as is
+	//*******************
+	value := m.runtime_vars[key]
+	return value, nil
+}
+
+// GetConfigValue will return the value of the config with the given key
+// key - the key of the config to return
+// data_type - the type of the config to return
+// custom - custom values to pass to the config function
+// returns the value of the config or nil if the config does not exist
+// returns an error if the config function is not set
+func (w *Workflow) GetConfigValue(config_target string, key string, data_type string, custom ...string) (interface{}, error) {
+	var tmp_config ReadConfigFunc
+
+	//************************************************
+	//See if the config function is set for the target
+	//************************************************
+	if w.ReadConfigFunc[config_target] != nil {
+		tmp_config = w.ReadConfigFunc[config_target]
+	} else if config_target != "" {
+		return nil, fmt.Errorf("config function not set for target %v", config_target)
+	}
+
+	//********************************************************************************
+	//If the config target is not set or is default then get the first item in the map
+	//********************************************************************************
+	if config_target == "default" || config_target == "" {
+		//get the first item in the map
+		for _, v := range w.ReadConfigFunc {
+			tmp_config = v
+			break
+		}
+	}
+
+	//*******************
+	//Get the value as is
+	//*******************
+	result, err := tmp_config(key, data_type, custom...)
+	if w.LogLevel == LOG_VERBOSE {
+		log.LogVerbose(fmt.Sprintf("GetConfigValue Key(%v) Type(%v) Value(%v)\n", key, data_type, result))
+	}
+	return result, err
+}
+
+// MapTargetConfigValue will call the target config mapper function
+// m - the template data
+// target - the target to map
+// returns the mapped target
+// returns an error if the mapper function is not set
+func (w *Workflow) MapTargetConfigValue(m interface{}, target interface{}) (interface{}, error) {
+	//************************
+	//Call the mapper function
+	//************************
+	return w.TargetMapFunc(w, m, target)
+}
+
+// SetAnswers will set the answers for the workflow
+// answers - the answers to set
+func (m *Workflow) SetAnswers(answers map[string]interface{}) {
+	for key, value := range m.Manifest.Parameters {
+		if answers[value.Key] != nil {
+			m.Manifest.Parameters[key].SetAnswer(answers[value.Key])
+		}
+	}
+}
+
+// AddActionSchema adds an action and target schema to the client
+// and adds the action to the workflow
+func (m *Workflow) AddActionSchema(sch SchemaEndpoint) {
+
+	//********************************
+	//Add the actions to the workflow
+	//********************************
+	actions := sch.GetActionSchema()
+	for key := range actions {
+		action_schema := actions[key]
+		if action_schema.Action != nil {
+			m.ActionList[key] = action_schema.Action
+		}
+	}
+
+	//*********************************
+	//Add function maps to the workflow
+	//*********************************
+	fm := m.GetTemplateFuncMap()
+	if fm == nil {
+		if fm == nil {
+			m.SetTemplateFuncMap(m.GetInbuiltTemplateFuncMap())
+		}
+	}
+
+	//**************************************************
+	//Add the functions to the workflow from the library
+	//**************************************************
+	if sch.GetFunctionMap() != nil {
+		functions := sch.GetFunctionMap()
+		for key := range functions {
+			function_schema := functions[key]
+			fm[key] = function_schema.Function
+		}
+	}
+
 }

@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Mrpye/golib/lib"
+	"github.com/Mrpye/golib/file"
+	"github.com/Mrpye/golib/log"
 	"github.com/dop251/goja"
 	"github.com/drewstinnett/gout/v2"
 	"github.com/drewstinnett/gout/v2/formats/json"
@@ -15,39 +16,49 @@ import (
 	"github.com/drewstinnett/gout/v2/formats/yaml"
 )
 
-//Function to Process results from an action
+// ActionProcessResults processes the results of the action
+// - m is the template data model
+// - data is the data to process
+// - returns an error if there is an error
 func (w *Workflow) ActionProcessResults(m *TemplateData, data interface{}) error {
-	//***********************
-	//Get how to store result
-	//***********************
 
+	//************************
+	// what to do with results
+	//************************
 	result_action, err := w.GetConfigTokenString("result_action", m, false)
 	if err != nil {
 		return err
 	}
 
+	//**************************
+	// how to format the results
+	//**************************
 	result_format, err := w.GetConfigTokenString("result_format", m, false)
 	if err != nil {
 		return err
 	}
-
+	if w.LogLevel == LOG_VERBOSE {
+		log.LogVerbose(fmt.Sprintf("result_action: %s\n", result_action))
+		log.LogVerbose(fmt.Sprintf("result_format: %s\n", result_format))
+	}
 	//*************
 	//Nothing to do
 	//*************
 	if result_action == "" || result_action == "none" {
 		return nil
 	}
+
 	//*************************
 	//Create the gout formatter
 	//*************************
 	g, err := gout.New()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	//***************
-	//Format the data
-	//***************
+	//*******************************************************
+	//Format the data in the format specified default is json
+	//*******************************************************
 	if result_format != "" && result_format != "none" {
 		switch strings.ToLower(result_format) {
 		case "json":
@@ -64,6 +75,9 @@ func (w *Workflow) ActionProcessResults(m *TemplateData, data interface{}) error
 			g.SetFormatter(json.Formatter{})
 		}
 
+		//******************************
+		//Format the results to a string
+		//******************************
 		b := new(strings.Builder)
 		g.SetWriter(b)
 		err = g.Print(data)
@@ -71,6 +85,7 @@ func (w *Workflow) ActionProcessResults(m *TemplateData, data interface{}) error
 			return err
 		}
 		data = b.String()
+
 	}
 
 	//*****************
@@ -81,52 +96,61 @@ func (w *Workflow) ActionProcessResults(m *TemplateData, data interface{}) error
 		return nil
 	}
 
-	//***********************
-	//What other action to do
-	//***********************
+	//************************
+	// Run the js results code
+	//************************
 	if result_action == "js" {
-		//**************
-		//run js results
-		//**************
-		result_js, err := w.GetConfigTokenString("result_js", m, true)
+
+		//***********************
+		//get the js code or file
+		//***********************
+		js_code, err := w.GetConfigTokenString("result_js", m, true)
 		if err != nil {
 			return err
 		}
-		result_js_path := result_js
-		//If code will use else it will get overwritten
-		js_code := result_js
-		//*******************
-		//Test if file exists
-		//*******************
-		if lib.FileExists(result_js_path) {
+
+		//****************************
+		//Test if it is a file or code
+		//****************************
+		if file.FileExists(w.BuildPath(js_code)) {
 			//*************
 			//Read the code
 			//*************
-			js_code, err = lib.ReadFileToString(result_js_path)
+			js_code, err = file.ReadFileToString(js_code)
 			if err != nil {
 				return err
 			}
 		}
 
-		//**********
-		//Run the js
-		//**********
+		//*****************
+		// Create JS engine
+		//*****************
 		vm := w.CreateJSEngine()
 		_, err = vm.RunString(js_code)
 		if err != nil {
 			return err
 		}
+
+		//************************************************
+		// Get the ActionResults function from the js code
+		//************************************************
 		action_results, ok := goja.AssertFunction(vm.Get("ActionResults"))
 		if !ok {
 			return errors.New("no function found 'ActionResults'(model,result)")
 		}
-		res, err := action_results(goja.Undefined(), vm.ToValue(m), vm.ToValue(data))
 
+		//********************************************************
+		// Call the ActionResults function with the model and data
+		//********************************************************
+		res, err := action_results(goja.Undefined(), vm.ToValue(m), vm.ToValue(data))
 		if err != nil {
 			return err
 		}
+		//********************************
+		// Check if the js returned false
+		//********************************
 		if !res.ToBoolean() {
-			return errors.New("ActionResults returned false")
+			return errors.New("ActionResults JS returned false")
 		}
 	} else {
 		return fmt.Errorf("unknown result_action %s", result_action)

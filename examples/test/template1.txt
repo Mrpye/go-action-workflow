@@ -1,0 +1,1 @@
+{{tpl_file (build_path `template2.txt`) .Data}}

@@ -4,39 +4,35 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
-	"github.com/Mrpye/golib/lib"
+	"github.com/Mrpye/golib/convert"
+	"github.com/Mrpye/golib/log"
 	"github.com/gookit/color"
 )
 
-func (m *Workflow) RunSubWorkflow(key string, inputs map[string]interface{}) error {
-
-	// *******************************
-	// Run the job with the given key.
-	// *******************************
-	err := m.executeJob(key, true, inputs)
-
-	//************************
-	//Clear Internal Variables
-	//************************
-	m.current_job = nil
-	m.current_index = 0
-	m.model = nil
-	m.stack = CreateLoopStack()
-
-	return err
-}
-
-// *****************************************
-//RunJob will run the job with the given key
+// RunJob will run the job with the given key
 // key - the key of the job to run
-// returns an error if there is one
-// *****************************************
-func (m *Workflow) RunJob(key string) error {
+// returns - error
+func (m *Workflow) RunJob(key string, run_time_vars map[string]interface{}, params map[string]interface{}) error {
 
-	lib.ActionLog(fmt.Sprintf("Running Job %s", key), '*')
+	//************************
+	//Log the start of the job
+	//************************
+	log.ActionLogDT(fmt.Sprintf("Running Job %s", key), '*')
+
+	//************************
+	//Set the run time variables
+	//************************
+	m.runtime_vars = run_time_vars
+
+	//***************
+	//Set the answers
+	//***************
+	if params != nil {
+		m.SetAnswers(params)
+	}
+
 	// *******************************
 	// Run the job with the given key.
 	// *******************************
@@ -58,17 +54,46 @@ func (m *Workflow) RunJob(key string) error {
 	m.current_index = 0
 	m.model = nil
 	m.stack = CreateLoopStack()
+	m.runtime_vars = nil
 
-	lib.ActionLog(fmt.Sprintf("Finished running Job %s", key), '*')
+	if err != nil {
+		log.ActionLogRed(fmt.Sprintf("Job %s failed with error %s", key, err.Error()), '*')
+	} else {
+		log.ActionLogGreen(fmt.Sprintf("Job %s completed successfully", key), '*')
+	}
+
+	fmt.Println("")
+	fmt.Println("")
+	fmt.Println("")
 
 	return err
 }
 
-// **********************************************
+// RunSubWorkflow will run a SubWorkflow job with the given key
+// key - the key of the job to run
+// inputs - the inputs to the job
+// returns - error
+func (m *Workflow) RunSubWorkflow(key string, inputs map[string]interface{}) error {
+
+	// *******************************
+	// Run the job with the given key.
+	// *******************************
+	err := m.executeJob(key, true, inputs)
+
+	//************************
+	//Clear Internal Variables
+	//************************
+	m.current_job = nil
+	m.current_index = 0
+	m.model = nil
+	m.stack = CreateLoopStack()
+
+	return err
+}
+
 // executeJob will run the job with the given key
 // key - the key of the job to run
-// returns an error if there is one
-// **********************************************
+// returns - error
 func (m *Workflow) executeJob(key string, sub_process bool, input_values map[string]interface{}) error {
 
 	//**********************************************
@@ -140,19 +165,19 @@ func (m *Workflow) executeJob(key string, sub_process bool, input_values map[str
 			return err
 		}
 		if is_disabled {
-			if m.Verbose > LOG_QUIET {
+			if m.LogLevel > LOG_QUIET {
 				color := color.FgRed.Render
-				lib.ActionLog(fmt.Sprintf("Action Ignored: %s->%s : %s", current_action.Key, current_action.Action, color("Disabled")), '*')
+				log.ActionLogDT(fmt.Sprintf("Action Ignored: %s->%s : %s", current_action.Key, current_action.Action, color("Disabled")), '*')
 			}
 			continue
 		}
-		if m.Verbose > LOG_QUIET {
-			lib.ActionLog(fmt.Sprintf("Action: %s->%s", current_action.Key, current_action.Action), '*')
+		if m.LogLevel > LOG_QUIET {
+			log.ActionLogDT(fmt.Sprintf("Action: %s->%s", current_action.Key, current_action.Action), '*')
 		}
 		//********************************
 		//Parse any variable in the action
 		//********************************
-		action_parts, err := m.SplitActionParams(current_action.Action)
+		action_parts, err := m.splitActionParams(current_action.Action, true)
 		if err != nil {
 			return err
 		}
@@ -178,8 +203,8 @@ func (m *Workflow) executeJob(key string, sub_process bool, input_values map[str
 			if err != nil {
 				return err
 			}
-			if m.Verbose > LOG_QUIET {
-				lib.ActionLog("loop: "+action_parts[1]+"["+strconv.FormatInt(int64(temp_loop.CurrentValue), 10)+"]", '>')
+			if m.LogLevel > LOG_QUIET {
+				log.ActionLogDT("loop: "+action_parts[1]+"["+strconv.FormatInt(int64(temp_loop.CurrentValue), 10)+"]", '>')
 			}
 		case "next":
 			//Get the item off the stack
@@ -187,8 +212,8 @@ func (m *Workflow) executeJob(key string, sub_process bool, input_values map[str
 			if err != nil {
 				return err
 			}
-			if m.Verbose > LOG_QUIET {
-				lib.ActionLog("loop-end: "+temp_loop.VariableName+"["+strconv.FormatInt(int64(temp_loop.CurrentValue), 10)+"]", '<')
+			if m.LogLevel > LOG_QUIET {
+				log.ActionLogDT("loop-end: "+temp_loop.VariableName+"["+strconv.FormatInt(int64(temp_loop.CurrentValue), 10)+"]", '<')
 			}
 			//Increment the loop counter
 			inc_result, err := m.stack.Increment()
@@ -208,16 +233,16 @@ func (m *Workflow) executeJob(key string, sub_process bool, input_values map[str
 			//***************
 			err = m.RunAction(current_action)
 			if errors.Is(err, ErrEndWorkflow) {
-				if m.Verbose > LOG_QUIET {
-					lib.ActionLogOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
+				if m.LogLevel > LOG_QUIET {
+					log.ActionLogDateOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
 				}
 				return nil
 			}
 			if err != nil {
 				return err
 			}
-			if m.Verbose > LOG_QUIET {
-				lib.ActionLogOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
+			if m.LogLevel > LOG_QUIET {
+				log.ActionLogDateOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
 			}
 		}
 	}
@@ -225,52 +250,42 @@ func (m *Workflow) executeJob(key string, sub_process bool, input_values map[str
 	return nil
 }
 
-func (m *Workflow) SplitActionParams(action string) ([]string, error) {
-	//********************************
-	//Parse any variable in the action
-	//********************************
-	lowercase_action, err := m.ParseToken(m.model, action)
-	if err != nil {
-		return nil, err
-	}
-	action_parts := strings.Split(fmt.Sprintf("%v", lowercase_action), ";")
-	action_parts[0] = strings.ToLower(action_parts[0])
-	return action_parts, nil
-}
-
+// RunAction will run the action
+// - current_action - the action to run
+// - returns - error
 func (m *Workflow) RunAction(current_action *Action) error {
 
 	//********************************
 	//Parse any variable in the action
 	//********************************
-	action_parts, err := m.SplitActionParams(current_action.Action)
+	action_parts, err := m.splitActionParams(current_action.Action, false)
 	if err != nil {
 		return err
 	}
 	switch action_parts[0] {
 	case "end":
 		//End the job
-		if m.Verbose > LOG_QUIET {
-			lib.ActionLog("End", '*')
+		if m.LogLevel > LOG_QUIET {
+			log.ActionLogDT("End", '*')
 		}
 		return ErrEndWorkflow
-	case "error":
+	case "fail":
 		//End the job
-		if m.Verbose > LOG_QUIET {
-			lib.ActionLog("error", '*')
+		if m.LogLevel > LOG_QUIET {
+			log.ActionLogDateFail("fail", '*')
 		}
 		return fmt.Errorf("%s", action_parts[1])
 	case "print":
 		fmt.Println(action_parts[1])
-		if m.Verbose > LOG_QUIET {
-			lib.ActionLogOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
-		}
+		/*if m.LogLevel > LOG_QUIET {
+			log.ActionLogDateOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
+		}*/
 	case "goto":
 		if len(action_parts) < 2 {
 			return errors.New("not enough args for goto")
 		}
-		if m.Verbose > LOG_QUIET {
-			lib.ActionLog("goto: "+action_parts[1], '>')
+		if m.LogLevel > LOG_QUIET {
+			log.ActionLogDT("goto: "+action_parts[1], '>')
 		}
 		index := m.current_job.GetKeyIndex(action_parts[1])
 		if index == -1 {
@@ -281,39 +296,67 @@ func (m *Workflow) RunAction(current_action *Action) error {
 		if len(action_parts) < 2 {
 			return errors.New("not enough args for wait-seconds wait ")
 		}
-		if m.Verbose > LOG_QUIET {
-			lib.ActionLog("wait-seconds/wait: "+action_parts[1], '*')
-		}
+		/*if m.LogLevel > LOG_QUIET {
+			log.ActionLogDT("wait-seconds/wait: "+action_parts[1], '*')
+		}*/
 		count, err := strconv.Atoi(action_parts[1])
 		if err != nil {
 			return fmt.Errorf("value should be an int for wait-seconds wait %s", action_parts[1])
 		}
 		time.Sleep(time.Duration(count) * time.Second)
-		if m.Verbose > LOG_QUIET {
-			lib.ActionLogOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
-		}
+	//	if m.LogLevel > LOG_QUIET {
+	//	log.ActionLogDateOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
+	//	}
 	case "wait-minutes":
 		if len(action_parts) < 2 {
 			return errors.New("not enough args for wait-minutes")
 		}
-		if m.Verbose > LOG_QUIET {
-			lib.ActionLog("wait-minutes: "+action_parts[1], '*')
-		}
+		/*if m.LogLevel > LOG_QUIET {
+			log.ActionLogDT("wait-minutes: "+action_parts[1], '*')
+		}*/
 		count, err := strconv.Atoi(action_parts[1])
 		if err != nil {
 			return fmt.Errorf("value should be an int for wait-minutes %s", action_parts[1])
 		}
 		time.Sleep(time.Duration(count) * time.Minute)
-		if m.Verbose > LOG_QUIET {
-			lib.ActionLogOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
+		//if m.LogLevel > LOG_QUIET {
+	//		log.ActionLogDateOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
+	//}
+	case "wait-hours":
+		if len(action_parts) < 2 {
+			return errors.New("not enough args for wait-minutes")
 		}
+		/*if m.LogLevel > LOG_QUIET {
+			log.ActionLogDT("wait-minutes: "+action_parts[1], '*')
+		}*/
+		count, err := strconv.Atoi(action_parts[1])
+		if err != nil {
+			return fmt.Errorf("value should be an int for wait-minutes %s", action_parts[1])
+		}
+		time.Sleep(time.Duration(count) * time.Hour)
+		//if m.LogLevel > LOG_QUIET {
+		//	log.ActionLogDateOK(fmt.Sprintf("Action Completed: %s->%s", current_action.Key, current_action.Action), '-')
+		//}
+	case "action":
+		if len(action_parts) < 2 {
+			return errors.New("not enough args for action")
+		}
+		current_action = m.Manifest.GetGlobalAction(action_parts[1])
+		if current_action == nil {
+			return fmt.Errorf("global action %s not found", action_parts[1])
+		}
+		return m.RunAction(current_action)
 	default:
-		continue_on_error := lib.ConvertToBool(current_action.ContinueOnError)
+		continue_on_error := convert.ToBool(current_action.ContinueOnError)
 		var err error
+
 		if val, ok := m.ActionList[current_action.Action]; ok {
-			model := m.CreateTemplateData(current_action)
-			err = val(m, model)
+			m.model = m.CreateTemplateData(current_action)
+			err = val(m, m.model)
+		} else {
+			return fmt.Errorf("action %s not found", current_action.Action)
 		}
+
 		if err != nil {
 			//**************************************
 			//See if this is an end workflow error
@@ -326,30 +369,30 @@ func (m *Workflow) RunAction(current_action *Action) error {
 			// See if to continue on error
 			//****************************
 			if continue_on_error {
-				lib.PrintlnFail("!! There was an error but Continue On Error was set to true !!")
+				log.PrintlnFail("!! There was an error but Continue On Error was set to true !!")
 				return nil
 			}
 			//************************************
 			//lets see if to end or goto an action
 			//************************************
-			fail_parts, Slit_err := m.SplitActionParams(current_action.Fail)
+			fail_parts, Slit_err := m.splitActionParams(current_action.Fail, true)
 			if Slit_err != nil {
 				return Slit_err
 			}
 			if fail_parts[0] == "end" || fail_parts[0] == "" {
 				return err
 			} else if fail_parts[0] == "goto" {
-				lib.PrintlnFail("!! There but goto is set for fail !!")
+				log.PrintlnFail("!! There but goto is set for fail !!")
 
-				if m.Verbose > LOG_QUIET {
-					lib.LogVerbose(fmt.Sprintf("The follow error occurred for action: %s->%s:%s", current_action.Key, current_action.Action, err.Error()))
+				if m.LogLevel > LOG_QUIET {
+					log.LogVerbose(fmt.Sprintf("The follow error occurred for action: %s->%s:%s", current_action.Key, current_action.Action, err.Error()))
 				}
 
 				if len(fail_parts) < 2 {
 					return errors.New("not enough args for goto")
 				}
-				if m.Verbose > LOG_QUIET {
-					lib.ActionLog("goto: "+fail_parts[1], '>')
+				if m.LogLevel > LOG_QUIET {
+					log.ActionLogDT("goto: "+fail_parts[1], '>')
 				}
 				index := m.current_job.GetKeyIndex(fail_parts[1])
 				if index == -1 {

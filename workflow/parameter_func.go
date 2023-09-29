@@ -1,7 +1,11 @@
 package workflow
 
-import "fmt"
+import (
+	"github.com/Mrpye/golib/convert"
+)
 
+// GetValue returns the value of the parameter
+// returns the value of the parameter
 func (m *Parameter) GetValue() interface{} {
 	if m.answer != nil {
 		return m.answer
@@ -9,45 +13,44 @@ func (m *Parameter) GetValue() interface{} {
 	return m.Value
 }
 
+// ValueString returns the value of the parameter as a string
+// returns the value of the parameter as a string
 func (m *Parameter) ValueString() string {
-	if m.InputType == INPUT_TYPE_TEXT {
-		if m.answer != nil {
-			return fmt.Sprint(m.answer)
-		}
-		return fmt.Sprint(m.Value)
+	if m.answer != nil {
+		return convert.ToString(m.answer)
 	}
-	return fmt.Sprint(m.Value)
+	return convert.ToString(m.Value)
 }
 
+// ValueInt returns the value of the parameter as an int
+// returns the value of the parameter as an int
 func (m *Parameter) ValueInt() int {
-	if m.InputType == INPUT_TYPE_INT {
-		if m.answer != nil {
-			return m.answer.(int)
-		}
-		return m.Value.(int)
+	if m.answer != nil {
+		return convert.ToInt(m.answer)
 	}
-	return -1
+	return convert.ToInt(m.Value)
 }
 
+// ValueBool returns the value of the parameter as a bool
+// returns the value of the parameter as a bool
 func (m *Parameter) ValueBool() bool {
-	if m.InputType == INPUT_TYPE_BOOL {
-		if m.answer != nil {
-			return m.answer.(bool)
-		}
-		return m.Value.(bool)
+	if m.answer != nil {
+		return convert.ToBool(m.answer)
 	}
-	return false
-}
-func (m *Parameter) ValueFloat() float64 {
-	if m.InputType == INPUT_TYPE_FLOAT {
-		if m.answer != nil {
-			return m.answer.(float64)
-		}
-		return m.Value.(float64)
-	}
-	return -1
+	return convert.ToBool(m.Value)
 }
 
+// ValueFloat returns the value of the parameter as a float64
+// returns the value of the parameter as a float64
+func (m *Parameter) ValueFloat() float64 {
+	if m.answer != nil {
+		return convert.ToFloat64(m.answer)
+	}
+	return convert.ToFloat64(m.Value)
+}
+
+// SetAnswer sets the answer of the parameter
+// - answer is the answer to set
 func (m *Parameter) SetAnswer(answer interface{}) {
 	m.answer = answer
 }

@@ -1,0 +1,24 @@
+meta_data:
+  name: for testing
+  description: This is an example will copy a file
+  version: 1.0.0
+  author: Andrew Pye
+  contact: ""
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2023-03-15T12:19:56Z"
+  vars:
+    github_project: Mrpye/hauler-package-netbox
+actions:
+
+jobs:
+  - key: install
+    title: ""
+    description: ""
+    actions:
+      - action: |
+            print;{{tpl_file (build_path `template1.txt`) (kps (kp `test1` `value-test_1`)  (kp `test2` `value-test_2`))}}
+parameters:
+  - key: test
+    value: "hello"
+
+data: {}

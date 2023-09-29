@@ -1,0 +1,14 @@
+instance-id: "{{get_param `vm_name`}}"
+local-hostname: "{{get_param `vm_name`}}"
+network:
+  version: 2
+  ethernets:
+    ens192:
+      addresses: [{{get_param `ip`}}/24]
+      gateway4: {{get_param `gateway`}}
+      dhcp6: false
+      nameservers:
+        addresses:
+          - 8.8.8.8
+      dhcp4: false
+      optional: true

@@ -1,0 +1,31 @@
+meta_data:
+  name: git_download
+  description: This is an example of how to use the store action
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: example
+    actions:
+      - action:  git_download
+        disabled: false
+        config:
+          files:
+            - project: "Mrpye/go-action-workflow"
+              service: "github"
+              file: "README.md"
+              dest: "docs/README.md"
+              branch: "main"
+            - short:  "github;Mrpye/go-action-workflow;LICENSE;docs/LICENSE;main"
+      - action: file_delete
+        config:
+          source_file: "./docs"
+
+      
+              
+             
+      
+
+  

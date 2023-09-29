@@ -1,5 +1,40 @@
 # go-action-workflow is a basic automation workflow library for GO
 
+# TOC
+- [go-action-workflow is a basic automation workflow library for GO](#go-action-workflow-is-a-basic-automation-workflow-library-for-go)
+- [TOC](#toc)
+  - [Description](#description)
+  - [When to use go-action-workflow](#when-to-use-go-action-workflow)
+  - [Requirements](#requirements)
+  - [Project folders](#project-folders)
+  - [Installation](#installation)
+  - [go-action-workflow manifest format](#go-action-workflow-manifest-format)
+    - [Examples](#examples)
+  - [Template Engine](#template-engine)
+    - [Reference to the manifest object model and valid data values.](#reference-to-the-manifest-object-model-and-valid-data-values)
+  - [Custom data](#custom-data)
+    - [Examples](#examples-1)
+  - [Custom data code reference](#custom-data-code-reference)
+  - [Inbuilt Actions](#inbuilt-actions)
+    - [Examples](#examples-2)
+  - [Actions available in the package](#actions-available-in-the-package)
+  - [Actions Examples and Parameters](#actions-examples-and-parameters)
+  - [Intergrade With Config System](#intergrade-with-config-system)
+    - [Function footprint](#function-footprint)
+    - [Add function to workflow](#add-function-to-workflow)
+    - [Get config data in code](#get-config-data-in-code)
+    - [Examples](#examples-3)
+  - [How to use go-action-workflow](#how-to-use-go-action-workflow)
+    - [Examples](#examples-4)
+  - [Change Log](#change-log)
+    - [v0.1.0](#v010)
+    - [v0.2.0](#v020)
+    - [v0.3.0](#v030)
+  - [To Do](#to-do)
+  - [Some notable 3rd party Libraries](#some-notable-3rd-party-libraries)
+  - [license](#license)
+
+
 ## Description
 go-action-workflow allows you to embed a basic workflow engine into your GO projects supporting basic flow operations such as loops, goto, pause and end. you can create custom actions to perform tasks, and using go's template engine you can manipulate values in your workflow manifest. with the ability to run **js** you can manipulate data returned from your actions and store data so that it can be used in later actions. 
 
@@ -48,6 +83,8 @@ go get github.com/Mrpye/go-action-workflow
 
 ## go-action-workflow manifest format
 The go-action-workflow manifest is a YAML file used to define a workflow and actions to be performed, you can then load this into go-action-workflow and run a job. see the [`basic-example`](#how-to-use-go-action-workflow) under **How to use go-action-workflow** for more information on loading and running workflow manifest file. 
+
+### Examples
 
 <details>
 <summary>example manifest</summary>
@@ -255,6 +292,8 @@ you can use template functions to manipulate or access data. below is a table of
 
 You can add arbitrary custom data to the manifest and then use this data either to inject using the template engine or in code when writing your actions.
 
+### Examples
+
 There is a more detailed example in the examples folder:
 
 **Example** example/workflow-custom-data
@@ -360,7 +399,8 @@ ToInt64() int64
 </details>
 
 ---
-## inbuilt actions
+
+## Inbuilt Actions
 go-action-workflow comes with some basic actions mainly around handling the flow. each parameter is separated with **;**. You can also use end or goto in the Fail field of the action
 
 |   action        |params| Description  |
@@ -375,6 +415,8 @@ go-action-workflow comes with some basic actions mainly around handling the flow
 | error   |[message]]|causes the job to fail |
 
 ---
+
+### Examples
 
 <details>
 <summary>Examples</summary>
@@ -447,7 +489,7 @@ This action enables you to make Rest API Calls
 | result_format    |none,json,yaml,toml,xml,plain   |how to format the result|
 | result_js    |   |js to process the result can be a file or inline |
 
-### POST Example
+**POST Example**
 ```yaml
 - action: api
     description: "This is an example of calling an API POST request."
@@ -469,7 +511,7 @@ This action enables you to make Rest API Calls
         }
 ```
 
-### GET Example
+**GET Example**
 ```yaml
 - action: api
     description: "This is an example of calling an API GET request."
@@ -497,11 +539,11 @@ This action copies a file
 |   field     |  Options | Description|
 |-----------------|-------|-------|
 | source_file    |   |Source file to copy |
-| dest_file    |  | where to copy to (Use fullt path and filename) |
+| dest_file    |  | where to copy to (Use full path and filename) |
 
 
 
-### Copy Example
+**Copy Example**
 ```yaml
 - action: copy
     config:
@@ -522,7 +564,7 @@ This action deletes a file
 |-----------------|-------|-------|
 | source_file    |   |The file to delete |
 
-### Copy Example
+**Delete Example**
 ```yaml
 - action: delete
     config:
@@ -543,7 +585,7 @@ This action renames a file also acts as a move if your path is different
 | source_file    |   |The file to rename |
 | dest_file    |   |What to name it to (Full path)  |
 
-### Copy Example
+**Rename Example**
 ```yaml
 - action: rename
     config:
@@ -726,6 +768,145 @@ jobs:
 ```
 
 </details>
+
+---
+## Intergrade With Config System
+
+There maybe a need where you need to read configuration information using something like viper or vault. 
+go-action-workflow does not tie you down to any particular system but but gives you the ability to intergrade how you see fit.
+
+This works in a similar to how the custom actions are implemented.
+
+you can find an example of this implemented in **examples/pass-config-data-to-action**
+
+### Function footprint
+Below is the function template you need to implement.
+
+```go
+type ReadConfigFunc func(key string, data_type string, custom ...string) (interface{}, error)
+```
+
+Below is just a guide on  what the value are used for, but it's not set in stone it all depends on how you implement the ReadConfigFunc function
+
+|field|description|
+|-----|-----------|
+|key|Used to reference the key to the data|
+|data_type| Used to pass the type of data required|
+|custom|used to pass other string data that might be needed|
+
+### Add function to workflow
+Adding more than one config system is easy. See the code below.
+This allows flexibility, for instance you have secrets in vault but general setting in a config file. 
+
+```go
+  //*************************
+	//Setup the config function
+	//*************************
+	wf.ReadConfigFunc["viper"] = ReadViperConfig
+	wf.ReadConfigFunc["other"] = ReadOtherConfig
+```
+
+### Get config data in code
+To access the config data use GetConfigValue, depending on how you implement the ReadConfigFunc will affect what values you pass.
+
+```go
+GetConfigValue(config_target string, key string, data_type string, custom ...string) (interface{}, error)
+```
+
+|field|description|
+|-----|-----------|
+|config_target|ReadConfigFunc to call|
+|key|Used to reference the key to the data|
+|data_type| Used to pass the type of data required|
+|custom|used to pass other string data that might be needed|
+
+### Examples
+
+<details>
+<summary>1. calling GetConfigValue</summary>
+
+Below is a basic example of how you might call GetConfigValue to retrieve your data in code.
+
+```go
+func Action_ReadConfig(w *workflow.Workflow, m *workflow.TemplateData) error {
+	
+	value, err := w.GetConfigValue("viper", "targets.git.host", "string")
+	if err != nil {
+		return err
+	}
+	println(value.(string))
+
+	value, err = w.GetConfigValue("other", "A", "", "custom data4", "custom data5", "custom data6")
+	if err != nil {
+		return err
+	}
+	println(value.(string))
+
+	return nil
+}
+```
+
+</details>
+
+<details>
+<summary>2. calling GetConfigValue using the template engine</summary>
+
+Below is a basic example of how you might call GetConfigValue from the manifest.
+
+```yaml
+meta_data:
+  name: read-config-example
+  description: This example shows how to read config data from a file and pass it to an action
+  version: 1.0.0
+  author: Andrew Pye
+  contact:
+  create_date: "2022-11-13 11:39:44"
+  update_date: "2022-11-13 11:39:44"
+jobs:
+  - key: read-config-example
+    actions:
+      - action: config
+      - action: "print;{{get_config `viper` `targets.git.user` `string` `test 1` `test 2` `test 3`}}"
+```
+
+</details>
+
+<details>
+<summary>3. Example implementation of ReadConfigFunc</summary>
+Below is a basic example of how you might implement ReadConfigFunc to retrieve config data using viper.
+
+```go
+func ReadViperConfig(key string, data_type string, custom ...string) (interface{}, error) {
+	if key == "" {
+		return nil, errors.New("key is empty")
+	}
+
+	//****************************************************************************
+	//custom is used to pass other string data to the config function
+	//this is useful if you want to pass a config file name or something like that
+	//****************************************************************************
+	for _, v := range custom {
+		println(v)
+	}
+
+	switch data_type {
+	case "string":
+		return viper.GetString(key), nil
+	case "int":
+		return viper.GetInt(key), nil
+	case "bool":
+		return viper.GetBool(key), nil
+	case "float64":
+		return viper.GetFloat64(key), nil
+	default:
+		return viper.GetString(key), nil
+	}
+}
+```
+
+</details>
+
+
 ---
 
 ## How to use go-action-workflow
@@ -734,6 +915,7 @@ The quickest and easiest way to get started is by creating a workflow manifest. 
 The [`git repo`](https://github.com/Mrpye/go-action-workflow) comes with some example that will cover the basics to more advanced features.
 You can find the example in the examples folder
 
+### Examples
 
 <details>
 <summary>1. simple-example</summary>
@@ -742,7 +924,7 @@ This example creates a workflow that loops x number of time based on the value i
 
 you can locate the example under: examples/simple-example
 
-### main.go
+**main.go**
 
 To be able to run the workflow you need to create an 
 - instance of go-action-workflow using **workflow.CreateWorkflow()** 
@@ -771,7 +953,7 @@ func main() {
     //**********************************
 	//Only show errors and print actions
 	//**********************************
-	wf.Verbose = workflow.LOG_QUIET
+	wf.LogLevel = workflow.LOG_QUIET
 
 	//*************************
 	//load the workflow manifest
@@ -792,7 +974,7 @@ func main() {
 
 ```
 
-### workflow.yaml
+**workflow.yaml**
 
 
 ```yaml
@@ -819,7 +1001,7 @@ parameters:
       value: 10
     
 ```
-## Result
+**Result**
 
 ```bash
 This is an example value
@@ -845,7 +1027,7 @@ This example creates a workflow that shows how you can create your own custom ac
 
 you can locate the example under: examples/add-custom-actions-example
 
-### main.go
+**main.go**
 
 In this example we have created a custom action called **MultiPrint** and we added it to the workflow engine
 - The function must use the following definition **func [FunctionName](w *workflow.Workflow, m *workflow.TemplateData) error**
@@ -880,7 +1062,7 @@ func main() {
 	//**********************************
 	//Only show errors and print actions
 	//**********************************
-	wf.Verbose = workflow.LOG_QUIET
+	wf.LogLevel = workflow.LOG_QUIET
 
 	//*******************
 	//Add a custom action
@@ -956,7 +1138,7 @@ func MultiPrint(w *workflow.Workflow, m *workflow.TemplateData) error {
 
 ```
 
-### workflow.yaml
+**workflow.yaml**
 
 
 ```yaml
@@ -995,7 +1177,7 @@ parameters:
 
 
 ```
-## Result
+**Result**
 
 ```bash
 This is an example value
@@ -1013,7 +1195,7 @@ This example shows you how to process results and store the values for later use
 
 you can locate the example under: examples/handling-result-data-storing-results
 
-### main.go
+**main.go**
 
 In this example we use the **w.ActionProcessResults** process the results using js to extract data from the payload and store the data for use in a later action, we also use the model parameter in the **js** to get data from the manifest and store this.
 
@@ -1049,7 +1231,7 @@ func main() {
 	//**********************************
 	//Only show errors and print actions
 	//**********************************
-	wf.Verbose = workflow.LOG_QUIET
+	wf.LogLevel = workflow.LOG_QUIET
 
 	//*******************
 	//Add a custom action
@@ -1108,7 +1290,7 @@ func MultiPrint(w *workflow.Workflow, m *workflow.TemplateData) error {
 
 ```
 
-### workflow.yaml
+**workflow.yaml**
 
 
 ```yaml
@@ -1161,7 +1343,7 @@ parameters:
 
 
 ```
-## Result
+**Result**
 
 ```bash
 Hello world
@@ -1180,7 +1362,7 @@ This example show how you can add start and cleanup handlers to your workflow. A
 
 you can locate the example under: examples/adding-start-and-cleanup-handlers
 
-### main.go
+**main.go**
 
 In this example we use the **wf.InitFunc** and **wf.CleanFunc** to handle startup and cleanup states. You function must follow the function patter **func FunctionName(w *workflow.Workflow, m *workflow.TemplateData) error**
 
@@ -1208,7 +1390,7 @@ func main() {
 	//**********************************
 	//Only show errors and print actions
 	//**********************************
-	wf.Verbose = workflow.LOG_QUIET
+	wf.LogLevel = workflow.LOG_QUIET
 
 	//*************************************
 	//Add the startup and cleanup functions
@@ -1271,7 +1453,7 @@ func Clean(w *workflow.Workflow, m *workflow.TemplateData) error {
 
 ```
 
-### workflow.yaml
+**workflow.yaml**
 
 
 ```yaml
@@ -1293,7 +1475,7 @@ jobs:
 parameters: 
 
 ```
-## Result
+**Result**
 
 ```bash
 http://localhost
@@ -1313,7 +1495,7 @@ ActionTest contains the tests and if an error occurs this will be passed by the 
 
 you can locate the example under: examples/full-test-example
 
-### main.go
+**main.go**
 
 ```go
 package main
@@ -1333,7 +1515,7 @@ func main() {
 	//**********************************
 	//Only show errors and print actions
 	//**********************************
-	wf.Verbose = workflow.LOG_INFO
+	wf.LogLevel = workflow.LOG_INFO
 
 	//*******************
 	//Add a custom action
@@ -1368,7 +1550,7 @@ func main() {
 
 ```
 
-### workflow.yaml
+**workflow.yaml**
 
 
 ```yaml
@@ -1502,7 +1684,7 @@ parameters:
     value: true
 
 ```
-## Result
+**Result**
 
 ```bash
 http://localhost
@@ -1520,7 +1702,7 @@ else it will fail. This also shows how you can manipulate the next task to be ru
 
 you can locate the example under: examples/condition-example
 
-### main.go
+**main.go**
 
 ```go
 package main
@@ -1539,7 +1721,7 @@ func main() {
 	//**********************************
 	//Only show errors and print actions
 	//**********************************
-	wf.Verbose = workflow.LOG_INFO
+	wf.LogLevel = workflow.LOG_INFO
 	wf.ActionList["condition"] = condition.Action_Condition
 
 	//*************************
@@ -1561,7 +1743,7 @@ func main() {
 
 ```
 
-### workflow.yaml
+**workflow.yaml**
 
 
 ```yaml
@@ -1595,7 +1777,7 @@ parameters:
       value: 1
 
 ```
-## Result
+**Result**
 
 ```bash
 2023/02/23 10:16:04 *************************
@@ -1621,13 +1803,23 @@ parameters:
 <details>
 <summary>7. Custom data and Call Custom Action from withing a Custom Action</summary>
 
-This action allows you to run multiple actions in parallel
+Example of getting custom data from the manifest and also calling a custom action from withing a custom action
 
 **Example:**  examples/workflow-custom-data
 
 </details>
 
+<details>
+<summary>8. Use viper to pass config info to action or templates</summary>
+
+This example shows how you wire in a config library to pass config information to actions or the template
+
+**Example:**  examples/pass-config-data-to-action
+
+</details>
+
 ---
+
 ## Change Log
 ### v0.1.0
   First build 
@@ -1665,7 +1857,7 @@ This action allows you to run multiple actions in parallel
 
 ## Some notable 3rd party Libraries
 - [https://github.com/dop251/goja](https://github.com/dop251/goja) JS engine
-
+- ["github.com/Mrpye/go-data-chain"]("github.com/Mrpye/go-data-chain")
 
 ---
 
