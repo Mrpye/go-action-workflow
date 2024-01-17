@@ -227,6 +227,97 @@ func (m *Workflow) GetConfigTokenInterfaceArray(key string, model *TemplateData,
 	return nil, nil
 }
 
+// GetConfigTokenMap will get the config token map from the action and replaces its tokens
+// key - the key of the config
+// model - the template data
+// required - if the key is required
+// returns the value of the map with the tokens replaced
+// returns an error if the key is not found
+func (m *Workflow) GetConfigTokenStringArray(key string, model *TemplateData, required bool) ([]string, error) {
+	if val, ok := model.CurrentAction.Config[key]; ok {
+		switch val := val.(type) {
+		case string:
+			//************************************************
+			//See if we are getting data from the data of meta
+			//************************************************
+			if strings.HasPrefix(val, "$") {
+				//The we read the data
+				result, err := m.GetDataFromString(val)
+				if err != nil {
+					return nil, err
+				}
+				//****************
+				//Convert to array
+				//****************
+				switch result_data := result.(type) {
+				case map[string]interface{}:
+					data := make([]string, len(result_data))
+					count := 0
+					for _, v := range result_data {
+						new_val, err := m.ParseToken(model, fmt.Sprintf("%v", v))
+						if m.LogLevel == LOG_VERBOSE {
+							log.LogVerbose(fmt.Sprintf("GetTokenString Value(%v) Result(%v)\n", v, new_val))
+						}
+						if err != nil {
+							return nil, err
+						}
+						data[count] = new_val
+						count++
+					}
+					return data, nil
+				case []interface{}:
+					data := make([]string, len(result_data))
+					count := 0
+					for _, v := range result_data {
+						new_val, err := m.ParseToken(model, fmt.Sprintf("%v", v))
+						if m.LogLevel == LOG_VERBOSE {
+							log.LogVerbose(fmt.Sprintf("GetTokenString Value(%v) Result(%v)\n", v, new_val))
+						}
+						if err != nil {
+							return nil, err
+						}
+						data[count] = new_val
+						count++
+					}
+					return data, nil
+				}
+			}
+		case []interface{}:
+			data := make([]string, len(val))
+			for i, v := range val {
+				switch v := v.(type) {
+				case string:
+					new_val, err := m.ParseToken(model, v)
+					if m.LogLevel == LOG_VERBOSE {
+						log.LogVerbose(fmt.Sprintf("GetTokenString Value(%v) Result(%v)\n", v, new_val))
+					}
+					if err != nil {
+						return nil, err
+					}
+					data[i] = new_val
+				default:
+					new_val, err := m.ParseToken(model, fmt.Sprintf("%v", v))
+					if m.LogLevel == LOG_VERBOSE {
+						log.LogVerbose(fmt.Sprintf("GetTokenString Value(%v) Result(%v)\n", v, new_val))
+					}
+					if err != nil {
+						return nil, err
+					}
+					data[i] = new_val
+				}
+			}
+			return data, nil
+		default:
+			// User defined types work as well
+			return nil, nil
+		}
+	}
+	if required {
+		return nil, fmt.Errorf("required parameter %s missing", key)
+	}
+	return nil, nil
+}
+
 // GetConfigToken will get the config token from the action and replaces its tokens
 // key - the key of the config
 // model - the template data

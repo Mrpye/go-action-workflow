@@ -3,6 +3,7 @@ package action_default
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Mrpye/go-action-workflow/workflow"
 )
@@ -19,19 +20,78 @@ func (s DefaultSchema) GetTargetSchema() map[string]workflow.TargetSchema {
 // GetFunctionMap returns the function map for this workflow
 func (s DefaultSchema) GetFunctionMap() map[string]workflow.FunctionSchema {
 	return map[string]workflow.FunctionSchema{
-		"image_name": {
-			Cmd:         "image_name",
-			Description: "gets the name of the image from the image path",
-			Target:      "action_docker",
+		"get_date": {
+			Cmd:         "get_date",
+			Description: "get the date in YYYY-MM-DD format",
+			Target:      "action_default",
+			Function:    GetDate,
 			ParameterSchema: map[string]*workflow.Schema{
-				"image": {
+				"format": {
 					Type:        workflow.TypeString,
+					Partial:     false,
 					Required:    true,
-					Description: "docker.io/circleci/[slim-base]:latest",
+					Description: "The format to return the date in",
+					Short:       "f",
+					Default:     "2006-01-02",
 				},
 			},
 		},
+		"get_time": {
+			Cmd:             "get_time",
+			Description:     "get the date in YYYY-MM-DD format",
+			Target:          "action_default",
+			Function:        GetTime,
+			ParameterSchema: map[string]*workflow.Schema{},
+		},
+		"get_datetime": {
+			Cmd:             "get_datetime",
+			Description:     "get the date in YYYY-MM-DD format",
+			Target:          "action_default",
+			Function:        GetDateTime,
+			ParameterSchema: map[string]*workflow.Schema{},
+		},
+
+		"get_day": {
+			Cmd:             "get_day",
+			Description:     "get the date in YYYY-MM-DD format",
+			Target:          "action_default",
+			Function:        GetDay,
+			ParameterSchema: map[string]*workflow.Schema{},
+		},
+		"get_month": {
+			Cmd:             "get_month",
+			Description:     "get the date in YYYY-MM-DD format",
+			Target:          "action_default",
+			Function:        GetMonth,
+			ParameterSchema: map[string]*workflow.Schema{},
+		},
+		"get_year": {
+			Cmd:             "get_year",
+			Description:     "get the date in YYYY-MM-DD format",
+			Target:          "action_default",
+			Function:        GetYear,
+			ParameterSchema: map[string]*workflow.Schema{},
+		},
 	}
+}
+
+func GetDate(format string) string {
+	return time.Now().Format(format)
+}
+func GetTime() string {
+	return time.Now().Format("15:04:05")
+}
+func GetDateTime() string {
+	return time.Now().Format("2006-01-02 15:04:05")
+}
+func GetDay() string {
+	return time.Now().Format("02")
+}
+func GetMonth() string {
+	return time.Now().Format("01")
+}
+func GetYear() string {
+	return time.Now().Format("2006")
 }
 
 // GetActions returns the actions for this workflow
