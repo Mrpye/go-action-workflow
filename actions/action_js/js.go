@@ -26,7 +26,7 @@ func (s JSSchema) GetActionSchema() map[string]workflow.ActionSchema {
 
 	//no short d f h
 	return map[string]workflow.ActionSchema{
-		"parallel": {
+		"js": {
 			Action:         Action_RunJS,
 			Short:          "Run a javascript file",
 			Long:           "Run a javascript file",

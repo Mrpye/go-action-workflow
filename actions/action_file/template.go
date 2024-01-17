@@ -30,7 +30,7 @@ func Action_Template(w *workflow.Workflow, m *workflow.TemplateData) error {
 	//**************
 	//Where to write
 	//**************
-	dest_file, err := w.GetConfigTokenString("dest_file", m, true)
+	dest_file, err := w.GetConfigTokenString("file", m, true)
 	if err != nil {
 		return err
 	}

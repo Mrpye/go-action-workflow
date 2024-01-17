@@ -51,7 +51,7 @@ func (s SystemSchema) GetActionSchema() map[string]workflow.ActionSchema {
 
 	//no short d f h
 	return map[string]workflow.ActionSchema{
-		"sub_workflow": {
+		"set_env": {
 			Action:         Action_SetEnv,
 			Short:          "Set Environment Variables",
 			Long:           "Set Environment Variables",

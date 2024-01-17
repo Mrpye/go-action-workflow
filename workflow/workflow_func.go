@@ -287,9 +287,12 @@ func (m *Workflow) AddActionSchema(sch SchemaEndpoint) {
 	if fm == nil {
 		if fm == nil {
 			m.SetTemplateFuncMap(m.GetInbuiltTemplateFuncMap())
+
 		}
 	}
-
+	if fm == nil {
+		fm = m.GetTemplateFuncMap()
+	}
 	//**************************************************
 	//Add the functions to the workflow from the library
 	//**************************************************
