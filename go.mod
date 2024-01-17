@@ -2,14 +2,10 @@ module github.com/Mrpye/go-action-workflow
 
 go 1.18
 
-replace github.com/Mrpye/go_k8_helm => C:\projects\go\go_k8_helm
-
-replace github.com/Mrpye/golib => C:\projects\go\golib
-
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Mrpye/go-data-chain v0.2.0
-	github.com/Mrpye/go_k8_helm v0.2.1
+	github.com/Mrpye/go_k8_helm v0.2.3
 	github.com/Mrpye/golib v0.2.2
 	github.com/bramvdbogaerde/go-scp v1.2.1
 	github.com/dop251/goja v0.0.0-20230226152633-7c93113e17ac
